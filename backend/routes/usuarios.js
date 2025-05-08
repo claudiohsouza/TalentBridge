@@ -9,7 +9,14 @@ const router = express.Router();
 // Obter perfil do usuário autenticado
 router.get('/me', authMiddleware, async (req, res, next) => {
   try {
-    const { pool } = req.app.locals;
+    console.log('[API-usuarios] Recebida solicitação para obter perfil do usuário:', req.user.id);
+    
+    const pool = req.db;
+    if (!pool) {
+      console.error('[API-usuarios] Pool de conexão não disponível');
+      throw new Error('Erro de conexão com o banco de dados');
+    }
+    
     const { id } = req.user;
     
     const result = await pool.query(
@@ -30,7 +37,14 @@ router.get('/me', authMiddleware, async (req, res, next) => {
 // Atualizar perfil do usuário autenticado
 router.put('/me', authMiddleware, validate(atualizacaoUsuarioSchema), async (req, res, next) => {
   try {
-    const { pool } = req.app.locals;
+    console.log('[API-usuarios] Recebida solicitação para atualizar perfil do usuário:', req.user.id);
+    
+    const pool = req.db;
+    if (!pool) {
+      console.error('[API-usuarios] Pool de conexão não disponível');
+      throw new Error('Erro de conexão com o banco de dados');
+    }
+    
     const { id } = req.user;
     const { email, senhaAtual, novaSenha } = req.body;
     

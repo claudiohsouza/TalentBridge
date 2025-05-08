@@ -1,47 +1,32 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
         cursor: {
-          bg: '#0f1117',
-          'bg-light': '#1a1c25',
-          'bg-lighter': '#2a2c35',
-          primary: '#5a5cd1',
-          'primary-dark': '#4a4cb0',
-          'primary-light': '#7a7ce1',
-          accent: '#fc7b54',
-          'accent-light': '#fd9b7c',
-          'text-primary': '#ffffff',
-          'text-secondary': '#a0aec0',
-          'text-tertiary': '#718096',
-          border: '#2d2f39',
-          'border-light': '#3d3f49',
+          primary: '#6366F1', // Indigo principal
+          'primary-dark': '#4F46E5',
+          secondary: '#0EA5E9', // Sky blue
+          'secondary-dark': '#0284C7',
+          background: '#0A0A0A', // Fundo escuro
+          'background-light': '#1A1A1A',
+          'background-card': '#1E1E1E',
+          text: {
+            primary: '#FFFFFF',
+            secondary: '#A3A3A3',
+            tertiary: '#737373',
+          },
+          border: '#2E2E2E',
+          success: '#22C55E',
+          error: '#EF4444',
+          warning: '#F59E0B',
         },
       },
       fontFamily: {
-        sans: [
-          'Inter',
-          'ui-sans-serif',
-          'system-ui',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
-          'Arial',
-          'sans-serif',
-        ],
-        mono: [
-          'JetBrains Mono',
-          'ui-monospace',
-          'SFMono-Regular',
-          'Menlo',
-          'Monaco',
-          'Consolas',
-          'monospace',
-        ],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
@@ -63,8 +48,9 @@ module.exports = {
         },
       },
       boxShadow: {
-        'cursor': '0 4px 14px 0 rgba(0, 0, 0, 0.25)',
-        'cursor-lg': '0 10px 25px 0 rgba(0, 0, 0, 0.35)',
+        cursor: '0 0 0 1px rgba(255, 255, 255, 0.1)',
+        'cursor-md': '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'cursor-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
       },
     },
   },

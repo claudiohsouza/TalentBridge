@@ -7,6 +7,7 @@ const logger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.json()
   ),
+  defaultMeta: { service: 'api' },
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(
@@ -53,30 +54,53 @@ export class ForbiddenError extends ApiError {
   }
 }
 
+export class DatabaseError extends ApiError {
+  constructor(message = 'Erro de banco de dados', details = null) {
+    super(message, 500, details);
+  }
+}
+
 // Middleware de tratamento de erros
 export const errorHandler = (err, req, res, next) => {
-  // Log do erro
-  logger.error(`${err.name}: ${err.message}`, {
+  // Determinar status code
+  const statusCode = err.statusCode || 500;
+  const isServerError = statusCode >= 500;
+  
+  // Log do erro (nível error para 5xx, warning para 4xx)
+  const logLevel = isServerError ? 'error' : 'warn';
+  const errorData = {
     url: req.originalUrl,
     method: req.method,
     ip: req.ip,
-    stack: err.stack,
+    userId: req.user?.id,
+    userRole: req.user?.papel,
+    statusCode,
+    errorName: err.name,
     details: err.details || {}
-  });
-
-  // Determinar status code
-  const statusCode = err.statusCode || 500;
+  };
   
+  // Adicionar stack trace para erros de servidor
+  if (isServerError) {
+    errorData.stack = err.stack;
+  }
+  
+  logger[logLevel](`${err.name}: ${err.message}`, errorData);
+
   // Formato de resposta padronizado
   const errorResponse = {
-    erro: err.message || 'Erro interno do servidor',
-    statusCode,
-    success: false
+    status: 'error',
+    code: statusCode,
+    message: err.message || 'Erro interno do servidor'
   };
   
   // Adicionar detalhes se existirem (útil para erros de validação)
   if (err.details) {
-    errorResponse.detalhes = err.details;
+    errorResponse.details = err.details;
+  }
+  
+  // Adicionar código de erro se existir
+  if (err.code) {
+    errorResponse.errorCode = err.code;
   }
   
   // Adicionar stack trace em desenvolvimento
@@ -101,5 +125,6 @@ export default {
   NotFoundError,
   ValidationError,
   AuthenticationError,
-  ForbiddenError
+  ForbiddenError,
+  DatabaseError
 }; 

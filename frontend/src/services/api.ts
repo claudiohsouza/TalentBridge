@@ -4,22 +4,21 @@ import {
   LoginRequest,
   RegisterRequest,
   User,
-  Estudante,
-  EstudanteInput,
-  ApiResponse
+  ApiResponse,
+  Jovem,
+  JovemInput,
+  Oportunidade,
+  OportunidadeInput
 } from '../types';
 
 // Configuração do axios
-const API_URL = 'http://localhost:5000';
-
+// Deixamos o baseURL vazio para aproveitar o proxy configurado no package.json
 const api = axios.create({
-  baseURL: API_URL,
-  withCredentials: true, // Importante para enviar cookies nas requisições cross-origin
   headers: {
     'Content-Type': 'application/json; charset=utf-8',
     'Accept': 'application/json; charset=utf-8'
   },
-  // Timeout em ms
+  withCredentials: true, // Importante para cookies e autenticação cross-origin
   timeout: 10000
 });
 
@@ -178,66 +177,162 @@ export const usuarioService = {
   }
 };
 
-// Serviços de estudantes
-export const estudanteService = {
-  listarEstudantes: async (): Promise<Estudante[]> => {
+// Serviços de Jovens
+export const jovemService = {
+  listarJovens: async (): Promise<Jovem[]> => {
     try {
-      console.log('[Estudante Service] Listando estudantes');
-      const response = await api.get<Estudante[]>('/api/estudantes');
-      console.log('[Estudante Service] Estudantes encontrados:', response.data.length);
+      console.log('[Jovem Service] Listando jovens');
+      const response = await api.get<Jovem[]>('/api/jovens');
+      console.log('[Jovem Service] Jovens encontrados:', response.data.length);
       return response.data;
     } catch (error) {
-      console.error('[Estudante Service] Erro ao listar estudantes:', error);
+      console.error('[Jovem Service] Erro ao listar jovens:', error);
       throw error;
     }
   },
 
-  getEstudante: async (id: number): Promise<Estudante> => {
+  getJovem: async (id: number): Promise<Jovem> => {
     try {
-      console.log(`[Estudante Service] Buscando estudante ID ${id}`);
-      const response = await api.get<Estudante>(`/api/estudantes/${id}`);
-      console.log('[Estudante Service] Estudante encontrado:', response.data);
+      console.log(`[Jovem Service] Buscando jovem ID ${id}`);
+      const response = await api.get<Jovem>(`/api/jovens/${id}`);
+      console.log('[Jovem Service] Jovem encontrado:', response.data);
       return response.data;
     } catch (error) {
-      console.error(`[Estudante Service] Erro ao buscar estudante ID ${id}:`, error);
+      console.error(`[Jovem Service] Erro ao buscar jovem ID ${id}:`, error);
       throw error;
     }
   },
   
-  adicionarEstudante: async (estudante: EstudanteInput): Promise<Estudante> => {
+  adicionarJovem: async (jovem: JovemInput): Promise<Jovem> => {
     try {
-      console.log('[Estudante Service] Adicionando estudante:', estudante.nome);
-      const response = await api.post<Estudante>('/api/estudantes', estudante);
-      console.log('[Estudante Service] Estudante adicionado:', response.data);
+      console.log('[Jovem Service] Adicionando jovem:', jovem.nome);
+      const response = await api.post<Jovem>('/api/jovens', jovem);
+      console.log('[Jovem Service] Jovem adicionado:', response.data);
       return response.data;
     } catch (error) {
-      console.error('[Estudante Service] Erro ao adicionar estudante:', error);
+      console.error('[Jovem Service] Erro ao adicionar jovem:', error);
       throw error;
     }
   },
 
-  atualizarEstudante: async (id: number, estudante: EstudanteInput): Promise<Estudante> => {
+  atualizarJovem: async (id: number, jovem: JovemInput): Promise<Jovem> => {
     try {
-      console.log(`[Estudante Service] Atualizando estudante ID ${id}:`, estudante.nome);
-      const response = await api.put<Estudante>(`/api/estudantes/${id}`, estudante);
-      console.log('[Estudante Service] Estudante atualizado:', response.data);
+      console.log(`[Jovem Service] Atualizando jovem ID ${id}:`, jovem.nome);
+      const response = await api.put<Jovem>(`/api/jovens/${id}`, jovem);
+      console.log('[Jovem Service] Jovem atualizado:', response.data);
       return response.data;
     } catch (error) {
-      console.error(`[Estudante Service] Erro ao atualizar estudante ID ${id}:`, error);
+      console.error(`[Jovem Service] Erro ao atualizar jovem ID ${id}:`, error);
       throw error;
     }
   },
 
-  excluirEstudante: async (id: number): Promise<ApiResponse<null>> => {
+  excluirJovem: async (id: number): Promise<ApiResponse<null>> => {
     try {
-      console.log(`[Estudante Service] Excluindo estudante ID ${id}`);
-      const response = await api.delete<ApiResponse<null>>(`/api/estudantes/${id}`);
-      console.log('[Estudante Service] Estudante excluído');
+      console.log(`[Jovem Service] Excluindo jovem ID ${id}`);
+      const response = await api.delete<ApiResponse<null>>(`/api/jovens/${id}`);
+      console.log('[Jovem Service] Jovem excluído');
       return response.data;
     } catch (error) {
-      console.error(`[Estudante Service] Erro ao excluir estudante ID ${id}:`, error);
+      console.error(`[Jovem Service] Erro ao excluir jovem ID ${id}:`, error);
       throw error;
     }
+  }
+};
+
+// Serviços de Oportunidades
+export const oportunidadeService = {
+  listarOportunidades: async (): Promise<Oportunidade[]> => {
+    try {
+      console.log('[Oportunidade Service] Listando oportunidades');
+      const response = await api.get<Oportunidade[]>('/api/oportunidades');
+      console.log('[Oportunidade Service] Oportunidades encontradas:', response.data.length);
+      return response.data;
+    } catch (error) {
+      console.error('[Oportunidade Service] Erro ao listar oportunidades:', error);
+      throw error;
+    }
+  },
+
+  getOportunidade: async (id: number): Promise<Oportunidade> => {
+    try {
+      console.log(`[Oportunidade Service] Buscando oportunidade ID ${id}`);
+      const response = await api.get<Oportunidade>(`/api/oportunidades/${id}`);
+      console.log('[Oportunidade Service] Oportunidade encontrada:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`[Oportunidade Service] Erro ao buscar oportunidade ID ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  adicionarOportunidade: async (oportunidade: OportunidadeInput): Promise<Oportunidade> => {
+    try {
+      console.log('[Oportunidade Service] Adicionando oportunidade:', oportunidade.titulo);
+      const response = await api.post<Oportunidade>('/api/oportunidades', oportunidade);
+      console.log('[Oportunidade Service] Oportunidade adicionada:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[Oportunidade Service] Erro ao adicionar oportunidade:', error);
+      throw error;
+    }
+  },
+
+  atualizarOportunidade: async (id: number, oportunidade: OportunidadeInput): Promise<Oportunidade> => {
+    try {
+      console.log(`[Oportunidade Service] Atualizando oportunidade ID ${id}:`, oportunidade.titulo);
+      const response = await api.put<Oportunidade>(`/api/oportunidades/${id}`, oportunidade);
+      console.log('[Oportunidade Service] Oportunidade atualizada:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`[Oportunidade Service] Erro ao atualizar oportunidade ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  excluirOportunidade: async (id: number): Promise<ApiResponse<null>> => {
+    try {
+      console.log(`[Oportunidade Service] Excluindo oportunidade ID ${id}`);
+      const response = await api.delete<ApiResponse<null>>(`/api/oportunidades/${id}`);
+      console.log('[Oportunidade Service] Oportunidade excluída');
+      return response.data;
+    } catch (error) {
+      console.error(`[Oportunidade Service] Erro ao excluir oportunidade ID ${id}:`, error);
+      throw error;
+    }
+  }
+};
+
+// Serviço para obter opções do sistema
+export const opcoesService = {
+  // Buscar todas as opções disponíveis
+  obterTodasOpcoes: async () => {
+    const response = await fetch('/api/opcoes', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erro ao carregar opções do sistema');
+    }
+    
+    return response.json();
+  },
+  
+  // Buscar opções específicas por categoria
+  obterOpcoesPorCategoria: async (categoria: string) => {
+    const response = await fetch(`/api/opcoes/${categoria}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erro ao carregar opções da categoria: ${categoria}`);
+    }
+    
+    return response.json();
   }
 };
 

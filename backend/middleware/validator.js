@@ -4,24 +4,47 @@ import { ValidationError } from './errorHandler.js';
 // Middleware de validação genérico
 export const validate = (schema) => {
   return (req, res, next) => {
-    const { error, value } = schema.validate(req.body, {
-      abortEarly: false,
-      stripUnknown: true
-    });
+    try {
+      const { error, value } = schema.validate(req.body, {
+        abortEarly: false,
+        stripUnknown: true
+      });
 
-    if (error) {
-      const details = error.details.map(err => ({
-        field: err.path.join('.'),
-        message: err.message
-      }));
-      
-      throw new ValidationError('Erro de validação nos dados enviados', details);
+      if (error) {
+        const details = error.details.map(err => ({
+          field: err.path.join('.'),
+          message: err.message
+        }));
+        
+        return next(new ValidationError('Erro de validação nos dados enviados', details));
+      }
+
+      // Atualiza req.body com os dados validados e normalizados
+      req.body = value;
+      next();
+    } catch (err) {
+      next(new ValidationError('Erro ao processar validação', { general: err.message }));
     }
-
-    // Atualiza req.body com os dados validados e normalizados
-    req.body = value;
-    next();
   };
+};
+
+// Mensagens de erro padrão para reutilização
+const errorMessages = {
+  string: {
+    email: 'Deve ser um email válido',
+    min: 'Deve ter pelo menos {#limit} caracteres',
+    max: 'Deve ter no máximo {#limit} caracteres',
+    empty: 'Este campo é obrigatório'
+  },
+  number: {
+    min: 'Deve ser no mínimo {#limit}',
+    max: 'Deve ser no máximo {#limit}',
+    integer: 'Deve ser um número inteiro'
+  },
+  any: {
+    required: 'Este campo é obrigatório',
+    only: 'Valor inválido'
+  }
 };
 
 // Esquemas de validação para diferentes entidades e operações
@@ -29,46 +52,131 @@ export const validate = (schema) => {
 // Validação de Login
 export const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
-    'string.email': 'Email inválido',
-    'string.empty': 'Email é obrigatório',
-    'any.required': 'Email é obrigatório'
+    'string.email': errorMessages.string.email,
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
   }),
   senha: Joi.string().min(6).required().messages({
-    'string.min': 'A senha deve ter pelo menos 6 caracteres',
-    'string.empty': 'Senha é obrigatória',
-    'any.required': 'Senha é obrigatória'
+    'string.min': errorMessages.string.min,
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
   })
 });
 
 // Validação de Registro
 export const registroSchema = Joi.object({
   email: Joi.string().email().required().messages({
-    'string.email': 'Email inválido',
-    'string.empty': 'Email é obrigatório',
-    'any.required': 'Email é obrigatório'
+    'string.email': errorMessages.string.email,
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
   }),
   senha: Joi.string().min(6).required().messages({
-    'string.min': 'A senha deve ter pelo menos 6 caracteres',
-    'string.empty': 'Senha é obrigatória',
-    'any.required': 'Senha é obrigatória'
+    'string.min': errorMessages.string.min,
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
   }),
-  papel: Joi.string().valid('instituicao', 'empresa').required().messages({
-    'any.only': 'Papel deve ser instituicao ou empresa',
-    'string.empty': 'Papel é obrigatório',
-    'any.required': 'Papel é obrigatório'
+  nome: Joi.string().required().messages({
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
+  }),
+  papel: Joi.string().valid('instituicao_ensino', 'chefe_empresa', 'instituicao_contratante').required().messages({
+    'any.only': 'Papel deve ser instituicao_ensino, chefe_empresa ou instituicao_contratante',
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
+  }),
+  // Campos para instituição de ensino
+  tipo: Joi.string().when('papel', {
+    is: 'instituicao_ensino',
+    then: Joi.required().messages({
+      'string.empty': 'Tipo da instituição é obrigatório',
+      'any.required': 'Tipo da instituição é obrigatório'
+    }),
+    otherwise: Joi.optional()
+  }),
+  // Campos para chefe de empresa
+  empresa: Joi.string().when('papel', {
+    is: 'chefe_empresa',
+    then: Joi.required().messages({
+      'string.empty': 'Nome da empresa é obrigatório',
+      'any.required': 'Nome da empresa é obrigatório'
+    }),
+    otherwise: Joi.optional()
+  }),
+  setor: Joi.string().when('papel', {
+    is: 'chefe_empresa',
+    then: Joi.required().messages({
+      'string.empty': 'Setor da empresa é obrigatório',
+      'any.required': 'Setor da empresa é obrigatório'
+    }),
+    otherwise: Joi.optional()
+  }),
+  porte: Joi.string().when('papel', {
+    is: 'chefe_empresa',
+    then: Joi.required().messages({
+      'string.empty': 'Porte da empresa é obrigatório',
+      'any.required': 'Porte da empresa é obrigatório'
+    }),
+    otherwise: Joi.optional()
+  }),
+  // Campos comuns para todos os perfis
+  localizacao: Joi.string().required().messages({
+    'string.empty': 'Localização é obrigatória',
+    'any.required': 'Localização é obrigatória'
+  }),
+  // Campos específicos para cada tipo
+  areas_ensino: Joi.array().items(Joi.string()).when('papel', {
+    is: 'instituicao_ensino',
+    then: Joi.required(),
+    otherwise: Joi.optional()
+  }),
+  qtd_alunos: Joi.number().integer().min(0).when('papel', {
+    is: 'instituicao_ensino',
+    then: Joi.required(),
+    otherwise: Joi.optional()
+  }),
+  areas_atuacao: Joi.array().items(Joi.string()).when('papel', {
+    is: 'chefe_empresa',
+    then: Joi.required(),
+    otherwise: Joi.optional()
+  }),
+  areas_interesse: Joi.array().items(Joi.string()).when('papel', {
+    is: 'instituicao_contratante',
+    then: Joi.required(),
+    otherwise: Joi.optional()
+  }),
+  programas_sociais: Joi.array().items(Joi.string()).when('papel', {
+    is: 'instituicao_contratante',
+    then: Joi.required(),
+    otherwise: Joi.optional()
   })
+}).custom((value, helpers) => {
+  // Validação específica por papel
+  if (value.papel === 'instituicao_ensino' && (!value.areas_ensino || !value.qtd_alunos)) {
+    return helpers.error('any.invalid', { message: 'Áreas de ensino e quantidade de alunos são obrigatórios para instituições de ensino' });
+  }
+  
+  if (value.papel === 'chefe_empresa' && (!value.empresa || !value.setor || !value.porte || !value.areas_atuacao)) {
+    return helpers.error('any.invalid', { message: 'Empresa, setor, porte e áreas de atuação são obrigatórios para chefes de empresa' });
+  }
+  
+  if (value.papel === 'instituicao_contratante' && (!value.areas_interesse || !value.programas_sociais)) {
+    return helpers.error('any.invalid', { message: 'Áreas de interesse e programas sociais são obrigatórios para instituições contratantes' });
+  }
+  
+  return value;
 });
 
 // Validação de Atualização de Usuário
 export const atualizacaoUsuarioSchema = Joi.object({
   email: Joi.string().email().optional().messages({
-    'string.email': 'Email inválido'
+    'string.email': errorMessages.string.email
   }),
+  nome: Joi.string().optional(),
   senhaAtual: Joi.string().min(6).optional().messages({
-    'string.min': 'A senha atual deve ter pelo menos 6 caracteres'
+    'string.min': errorMessages.string.min
   }),
   novaSenha: Joi.string().min(6).optional().messages({
-    'string.min': 'A nova senha deve ter pelo menos 6 caracteres'
+    'string.min': errorMessages.string.min
   })
 }).custom((value, helpers) => {
   // Se novaSenha for fornecida, senhaAtual também deve ser
@@ -84,29 +192,66 @@ export const atualizacaoUsuarioSchema = Joi.object({
   return value;
 });
 
-// Validação de Criação de Estudante
-export const estudanteSchema = Joi.object({
+// Validação de Jovem
+export const jovemSchema = Joi.object({
   nome: Joi.string().required().messages({
-    'string.empty': 'Nome é obrigatório',
-    'any.required': 'Nome é obrigatório'
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
   }),
   email: Joi.string().email().required().messages({
-    'string.email': 'Email inválido',
-    'string.empty': 'Email é obrigatório',
-    'any.required': 'Email é obrigatório'
+    'string.email': errorMessages.string.email,
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
   }),
-  media_geral: Joi.number().min(0).max(10).allow(null).optional().messages({
-    'number.min': 'Média geral deve ser no mínimo 0',
-    'number.max': 'Média geral deve ser no máximo 10'
+  idade: Joi.number().integer().min(14).max(29).required().messages({
+    'number.base': 'Idade deve ser um número',
+    'number.integer': errorMessages.number.integer,
+    'number.min': errorMessages.number.min,
+    'number.max': errorMessages.number.max,
+    'any.required': errorMessages.any.required
   }),
-  estabilidade_estresse: Joi.number().integer().min(1).max(5).allow(null).optional().messages({
-    'number.base': 'Estabilidade/Estresse deve ser um número',
-    'number.integer': 'Estabilidade/Estresse deve ser um número inteiro',
-    'number.min': 'Estabilidade/Estresse deve ser no mínimo 1',
-    'number.max': 'Estabilidade/Estresse deve ser no máximo 5'
-  }),
+  formacao: Joi.string().allow(null, '').optional(),
   habilidades: Joi.array().items(Joi.string()).allow(null).optional(),
+  interesses: Joi.array().items(Joi.string()).allow(null).optional(),
   planos_futuros: Joi.string().allow('', null).optional()
+});
+
+// Validação de Oportunidade
+export const oportunidadeSchema = Joi.object({
+  titulo: Joi.string().required().messages({
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
+  }),
+  descricao: Joi.string().required().messages({
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
+  }),
+  tipo: Joi.string().required().messages({
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
+  }),
+  requisitos: Joi.array().items(Joi.string()).allow(null).optional(),
+  beneficios: Joi.array().items(Joi.string()).allow(null).optional(),
+  data_inicio: Joi.date().iso().allow(null).optional(),
+  data_fim: Joi.date().iso().min(Joi.ref('data_inicio')).allow(null).optional().messages({
+    'date.min': 'Data fim deve ser posterior à data início'
+  })
+});
+
+// Validação de Recomendação
+export const recomendacaoSchema = Joi.object({
+  jovem_id: Joi.number().integer().required().messages({
+    'number.base': 'ID do jovem deve ser um número',
+    'any.required': errorMessages.any.required
+  }),
+  oportunidade_id: Joi.number().integer().required().messages({
+    'number.base': 'ID da oportunidade deve ser um número',
+    'any.required': errorMessages.any.required
+  }),
+  justificativa: Joi.string().required().messages({
+    'string.empty': errorMessages.string.empty,
+    'any.required': errorMessages.any.required
+  })
 });
 
 export default {
@@ -114,5 +259,7 @@ export default {
   loginSchema,
   registroSchema,
   atualizacaoUsuarioSchema,
-  estudanteSchema
+  jovemSchema,
+  oportunidadeSchema,
+  recomendacaoSchema
 }; 

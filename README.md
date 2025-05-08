@@ -1,161 +1,166 @@
 # TalentBridge
 
-TalentBridge é uma aplicação web full-stack que conecta estudantes, instituições de ensino e empresas em um único ecossistema.
+TalentBridge é uma plataforma dedicada a conectar jovens talentos com oportunidades de emprego, estágio e capacitação. O sistema oferece uma interface integrada para instituições de ensino, empresas e instituições contratantes colaborarem no desenvolvimento profissional de jovens.
 
-## Pré-requisitos
+## 🚀 Tecnologias Utilizadas
 
-- [Node.js](https://nodejs.org/) (v18 ou superior)
-- [PostgreSQL](https://www.postgresql.org/) (v14 ou superior)
+### Backend
+- Node.js com Express
+- PostgreSQL
+- JWT para autenticação
+- Winston para logging
+- Joi para validação de dados
 
-## Configuração do Banco de Dados
+### Frontend
+- React com TypeScript
+- React Router para navegação
+- Context API para gerenciamento de estado
+- TailwindCSS para estilização
+- Axios para requisições HTTP
 
-1. Instale o PostgreSQL no seu computador
-2. Crie um banco de dados chamado `Data1`
-3. Use as seguintes credenciais padrão (ou altere no arquivo backend/server.js):
-   - Usuário: postgres
-   - Senha: 1234
-   - Host: localhost
-   - Porta: 5432
-   - Nome do banco: Data1
+## 📋 Pré-requisitos
 
-4. Para criar o esquema do banco de dados, execute o script SQL localizado em `backend/db/init.sql`
+- Node.js 18.x ou superior
+- PostgreSQL 14.x ou superior
+- npm 8.x ou superior
 
-## Como Executar o Projeto
+## 🔧 Instalação e Configuração
 
-### Iniciando o Backend
+### Banco de Dados
+1. Instale o PostgreSQL e crie um banco de dados chamado `Data1`
 
-**Windows:**
+### Backend
+1. Navegue até o diretório `backend`:
+   ```
+   cd backend
+   ```
+
+2. Instale as dependências:
+   ```
+   npm install
+   ```
+
+3. Crie um arquivo `.env` baseado no exemplo:
+   ```
+   # Configurações do Banco de Dados
+   DB_USER=postgres
+   DB_PASSWORD=1234
+   DB_HOST=localhost
+   DB_NAME=Data1
+   DB_PORT=5432
+
+   # Configurações do Servidor
+   PORT=3001
+   NODE_ENV=development
+   FRONTEND_URL=http://localhost:3000
+
+   # Configurações de Segurança
+   JWT_SECRET=sua_chave_secreta_de_producao_deve_ser_longa_e_aleatoria
+
+   # Configurações de Taxa de Limite (Rate Limiting)
+   RATE_LIMIT_WINDOW_MS=900000  # 15 minutos
+   RATE_LIMIT_MAX=100
+
+   # Configurações de Log
+   LOG_LEVEL=info
+   ```
+
+4. Inicialize o banco de dados com as opções padrão:
+   ```
+   npm run init-opcoes
+   ```
+
+5. Inicie o servidor:
+   ```
+   npm start
+   ```
+   Para desenvolvimento com reload automático:
+   ```
+   npm run dev
+   ```
+
+### Frontend
+1. Navegue até o diretório `frontend`:
+   ```
+   cd frontend
+   ```
+
+2. Instale as dependências:
+   ```
+   npm install
+   ```
+
+3. Inicie o servidor de desenvolvimento:
+   ```
+   npm start
+   ```
+
+### Inicialização Rápida (Windows)
+Use o script `start-dev.ps1` no diretório `scripts` para iniciar tanto o backend quanto o frontend em uma única etapa:
 ```
-start-backend.bat
+.\scripts\start-dev.ps1
 ```
 
-**Linux/Mac:**
-```bash
-cd backend
-npm install
-npm start
+## 📦 Estrutura do Projeto
+
+### Backend
+- `server.js`: Ponto de entrada da aplicação
+- `routes/`: Rotas da API
+- `middleware/`: Middlewares Express
+- `controllers/`: Lógica de negócios
+- `models/`: Modelos de dados
+- `db/`: Configurações de banco de dados
+
+### Frontend
+- `src/components/`: Componentes React reutilizáveis
+- `src/pages/`: Páginas da aplicação
+- `src/contexts/`: Contextos para gerenciamento de estado (AuthContext, etc.)
+- `src/services/`: Serviços para chamadas de API
+- `src/types/`: Definições de tipos TypeScript
+- `src/utils/`: Funções utilitárias
+
+## 🎨 Sistema de Design
+
+O frontend utiliza um sistema de design consistente baseado em TailwindCSS:
+
+- Classes de botões: `btn-primary`, `btn-secondary`
+- Classes de entrada: `input-field`
+- Classes de cartão: `card`
+- Animações: `animate-fade-in`, `animate-slide-up`, `animate-slide-down`
+- Loading spinner: `loading-spinner`
+
+## 👥 Papéis e Permissões
+
+O sistema possui quatro tipos principais de usuários:
+
+1. **Instituição de Ensino**: Gerencia jovens e visualiza oportunidades
+2. **Chefe de Empresa**: Administra jovens dentro da empresa
+3. **Instituição Contratante**: Cria e gerencia oportunidades
+
+## 🔐 Autenticação e Segurança
+
+O sistema utiliza:
+- JWT (JSON Web Tokens) para autenticação
+- Senhas criptografadas com bcrypt
+- Rate limiting para prevenção de ataques
+- Proteção contra ataques comuns usando helmet
+
+## 📫 Contribuição
+
+1. Faça um fork do projeto
+2. Crie sua branch de feature: `git checkout -b feature/nova-funcionalidade`
+3. Commit suas mudanças: `git commit -m 'Adiciona nova funcionalidade'`
+4. Push para a branch: `git push origin feature/nova-funcionalidade`
+5. Abra um Pull Request
+
+## 📚 Scripts Utilitários
+
+### Scripts de Inicialização
+- `init-opcoes.js`: Inicializa as opções do sistema (requer credenciais de administrador)
+- `import-database.js`: Importa dados para o banco de dados
+
+### Verificação de Código
+Execute o script de verificação para identificar problemas comuns:
 ```
-
-O servidor backend estará disponível em http://localhost:5000
-
-### Iniciando o Frontend
-
-**Windows:**
-```
-start-frontend.bat
-```
-
-**Linux/Mac:**
-```bash
-cd frontend
-npm install
-npm start
-```
-
-O aplicativo frontend estará disponível em http://localhost:3000
-
-## Solução de Problemas
-
-### Erro com bcrypt
-
-Se você encontrar problemas com o módulo bcrypt, tente reinstalá-lo:
-
-```bash
-cd backend
-npm uninstall bcrypt
-npm install bcrypt
-```
-
-### Problema de Conexão com o Banco de Dados
-
-Verifique se:
-1. O PostgreSQL está instalado e em execução
-2. As credenciais correspondem às usadas no servidor
-3. O banco de dados 'Data1' existe
-
-## Estrutura do Projeto
-
-- **backend/**: Servidor Node.js com Express
-  - **routes/**: Definições de rotas da API
-  - **middleware/**: Middlewares (erro, autenticação, etc.)
-  - **db/**: Scripts de banco de dados
-
-- **frontend/**: Aplicação React com TypeScript
-  - **src/components/**: Componentes React reutilizáveis
-  - **src/pages/**: Páginas da aplicação
-  - **src/services/**: Serviços de API e utilitários
-  - **src/contexts/**: Contextos React para gerenciamento de estado
-
-## Stack Tecnológica
-
-- **Frontend**: React, TypeScript, TailwindCSS
-- **Backend**: Node.js, Express.js
-- **Banco de Dados**: PostgreSQL
-- **Autenticação**: JWT
-
-## Funcionalidades
-
-- Autenticação JWT segura com controle de acesso baseado em papéis
-- Dashboards separados para instituições e empresas
-- Gerenciamento de perfis de estudantes com destaque para habilidades
-- Design responsivo para todos os dispositivos
-- Tratamento abrangente de erros e validação
-
-## Esquema do Banco de Dados
-
-A aplicação utiliza as seguintes tabelas principais:
-- `usuarios`: Armazena contas de usuários (instituições e empresas)
-- `estudantes`: Armazena perfis de estudantes criados pelas instituições
-
-### Dados de Exemplo
-
-O sistema vem com dados pré-carregados para facilitar os testes:
-
-#### Usuários de Exemplo
-- **Instituições**:
-  - Email: univ.federal@exemplo.com, Senha: senha123
-  - Email: faculdade.tech@exemplo.com, Senha: senha123
-- **Empresas**:
-  - Email: empresa.tecnologia@exemplo.com, Senha: senha123
-  - Email: consultoria.dev@exemplo.com, Senha: senha123
-
-#### Estudantes de Exemplo
-Já existem diversos perfis de estudantes cadastrados com diferentes características:
-- Estudantes com habilidades em tecnologias variadas (Java, Python, JavaScript, React, Flutter, etc.)
-- Diferentes níveis de média acadêmica
-- Perfis com diferentes níveis de estabilidade/estresse
-- Planos futuros e objetivos profissionais diversos
-
-## Rotas da API
-
-### Autenticação
-- `POST /api/auth/login`: Login de usuário
-- `POST /api/auth/registro`: Registro de usuário
-- `GET /api/auth/verify`: Verificar token de autenticação
-
-### Usuários
-- `GET /api/usuario/me`: Obter perfil do usuário atual
-- `PUT /api/usuario/me`: Atualizar perfil do usuário
-
-### Estudantes
-- `GET /api/estudantes`: Listar estudantes
-- `GET /api/estudantes/:id`: Obter um estudante específico
-- `POST /api/estudantes`: Adicionar um novo estudante
-- `PUT /api/estudantes/:id`: Atualizar um estudante
-- `DELETE /api/estudantes/:id`: Excluir um estudante
-
-## Implantação
-
-A aplicação inclui um Dockerfile e docker-compose.yml para fácil implantação em vários ambientes. Para implantação em produção, certifique-se de:
-
-1. Atualizar variáveis de ambiente com valores de produção
-2. Configurar cabeçalhos de segurança apropriados
-3. Configurar certificados SSL para HTTPS
-
-## Contribuindo
-
-Contribuições são bem-vindas! Sinta-se à vontade para enviar um Pull Request.
-
-## Licença
-
-Este projeto está licenciado sob a Licença MIT. 
+node scripts/lint-check.js
+``` 

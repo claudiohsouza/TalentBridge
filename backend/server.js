@@ -1,5 +1,4 @@
 import express from 'express';
-import { Pool } from 'pg';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
@@ -7,13 +6,16 @@ import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import errorHandlerModule from './middleware/errorHandler.js';
 import fs from 'fs';
+import db from './db-connect.js';
 
 const { errorHandler, notFoundHandler, logger } = errorHandlerModule;
 
 // Importar rotas
 import authRoutes from './routes/auth.js';
-import estudantesRoutes from './routes/estudantes.js';
 import usuariosRoutes from './routes/usuarios.js';
+import jovensRoutes from './routes/jovens.js';
+import oportunidadesRoutes from './routes/oportunidades.js';
+import opcoesRoutes from './routes/opcoes.js';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -49,7 +51,7 @@ const env = {
 const app = express();
 
 // Middlewares
-app.use(express.json({ extended: true }));
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Definir charset para todas as respostas
@@ -58,118 +60,118 @@ app.use((req, res, next) => {
   next();
 });
 
+// Configuração de segurança com helmet
 app.use(helmet({
   // Configurar helmet para permitir conexões do frontend
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-// Configuração CORS mais permissiva
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true,
+// Configuração CORS
+const corsOptions = {
+  origin: env.NODE_ENV === 'production' 
+    ? env.FRONTEND_URL
+    : [env.FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8080'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['set-cookie']
-}));
-
-// Para requisições OPTIONS (preflight)
-app.options('*', cors({
-  origin: 'http://localhost:3000',
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['set-cookie']
-}));
+  optionsSuccessStatus: 200,
+  maxAge: 3600
+};
 
-// Rate Limiting
+app.use(cors(corsOptions));
+
+// Limitador de taxa para prevenção de ataques de força bruta
 const limiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
-  max: env.RATE_LIMIT_MAX
+  max: env.RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: 'error',
+    message: 'Muitas requisições, tente novamente mais tarde'
+  }
 });
-app.use(limiter);
 
-// Logging
-app.use(morgan('dev'));
+// Aplicar limitador em todas as rotas (exceto em desenvolvimento)
+if (env.NODE_ENV === 'production') {
+  app.use(limiter);
+}
 
-// Conexão com PostgreSQL
-const pool = new Pool({
-  user: env.DB_USER,
-  host: env.DB_HOST,
-  database: env.DB_NAME,
-  password: env.DB_PASSWORD,
-  port: env.DB_PORT,
-  ssl: env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  // Adicionar configurações de codificação para garantir UTF-8
-  options: '-c client_encoding=UTF8'
-});
+// Logger para requisições HTTP
+if (env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined', {
+    stream: fs.createWriteStream('./access.log', { flags: 'a' })
+  }));
+}
 
 // Teste de conexão com o banco
-pool.connect()
-  .then(() => logger.info('Conexão com o banco de dados estabelecida'))
-  .catch(err => {
-    logger.error('Erro ao conectar ao banco de dados:', err);
-    console.error('Erro ao conectar ao banco de dados. Certifique-se de que PostgreSQL está instalado e rodando.');
-    console.error('Detalhes:', err.message);
-    process.exit(1);
-  });
-
-// Compartilhar pool em todo o app
-app.locals.pool = pool;
-
-// Health Check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    environment: env.NODE_ENV,
-    db_connected: !!pool.totalCount,
-    config: {
-      frontendUrl: env.FRONTEND_URL,
-      port: env.PORT
+db.testarConexao()
+  .then(success => {
+    if (success) {
+      logger.info('Conexão com o banco de dados validada com sucesso!');
+    } else {
+      logger.error('Falha ao validar conexão com o banco de dados');
     }
+  })
+  .catch(err => {
+    logger.error('Erro crítico de conexão com o banco de dados', { error: err.message });
   });
+
+// Expor conexão ao banco para uso nos módulos de rota
+app.locals.db = db.pool;
+console.log('Pool de banco de dados exposto em app.locals.db:', !!app.locals.db);
+
+// Injetar o pool e utils no objeto de request
+app.use((req, res, next) => {
+  req.db = db.pool;
+  req.dbUtils = db; // Acesso aos métodos utilitários
+  next();
 });
 
 // Rotas
 app.use('/api/auth', authRoutes);
-app.use('/api/estudantes', estudantesRoutes);
-app.use('/api/usuario', usuariosRoutes);
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/jovens', jovensRoutes);
+app.use('/api/oportunidades', oportunidadesRoutes);
+app.use('/api/opcoes', opcoesRoutes);
 
-// Registrar a rota legada para compatibilidade
-app.post('/api/registro', (req, res, next) => {
-  req.url = '/auth/registro';
-  app.handle(req, res, next);
+// Rota padrão
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'API TalentBridge funcionando!',
+    version: '1.0.0'
+  });
 });
 
-// Middlewares de erro
+// Middleware para permitir pre-flight requests em todas as rotas
+app.options('*', cors(corsOptions));
+
+// Middleware de tratamento para 404
 app.use(notFoundHandler);
+
+// Middleware de tratamento de erros
 app.use(errorHandler);
 
 // Iniciar servidor
 const PORT = env.PORT;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`Servidor rodando em http://localhost:${PORT}`);
-  logger.info('Ambiente:', env.NODE_ENV);
-  
-  // Log de rotas registradas
-  logger.info('Rotas registradas:');
-  logger.info('GET  /api/health');
-  logger.info('POST /api/auth/login');
-  logger.info('POST /api/auth/registro');
-  logger.info('GET  /api/auth/verify');
-  logger.info('GET  /api/estudantes');
-  logger.info('GET  /api/estudantes/:id');
-  logger.info('POST /api/estudantes');
-  logger.info('PUT  /api/estudantes/:id');
-  logger.info('GET  /api/usuario/me');
-  logger.info('PUT  /api/usuario/me');
+  logger.info(`Ambiente: ${env.NODE_ENV}`);
+  logger.info(`CORS permitindo origem: ${JSON.stringify(corsOptions.origin)}`);
 });
 
-// Gerenciar encerramento
-process.on('SIGINT', () => {
-  logger.info('Encerrando servidor...');
-  pool.end();
-  process.exit(0);
+// Tratamento de erros não capturados
+process.on('unhandledRejection', (err) => {
+  logger.error('Erro não tratado:', { error: err.message, stack: err.stack });
+  
+  // Fechamento controlado
+  server.close(() => {
+    logger.error('Servidor fechado devido a erro não tratado.');
+    process.exit(1);
+  });
 });
 
 export default app;

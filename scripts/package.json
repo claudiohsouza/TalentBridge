@@ -1,0 +1,16 @@
+{
+  "name": "talentbridge-scripts",
+  "version": "1.0.0",
+  "description": "Scripts utilitários para o projeto TalentBridge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "node lint-check.js",
+    "db-import": "node import-database.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.11.3"
+  }
+}
