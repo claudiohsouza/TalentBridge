@@ -66,12 +66,7 @@ TalentBridge é uma plataforma dedicada a conectar jovens talentos com oportunid
    LOG_LEVEL=info
    ```
 
-4. Inicialize o banco de dados com as opções padrão:
-   ```
-   npm run init-opcoes
-   ```
-
-5. Inicie o servidor:
+4. Inicie o servidor:
    ```
    npm start
    ```
@@ -79,6 +74,12 @@ TalentBridge é uma plataforma dedicada a conectar jovens talentos com oportunid
    ```
    npm run dev
    ```
+
+5. Depois que o servidor estiver rodando, inicialize o banco de dados com as opções padrão:
+   ```
+   npm run init-opcoes
+   ```
+   Nota: É importante que o servidor esteja em execução antes de executar este script, pois ele se comunica com a API do servidor.
 
 ### Frontend
 1. Navegue até o diretório `frontend`:
@@ -157,7 +158,7 @@ O sistema utiliza:
 ## 📚 Scripts Utilitários
 
 ### Scripts de Inicialização
-- `init-opcoes.js`: Inicializa as opções do sistema com valores padrão
+- `init-opcoes.js`: Inicializa as opções do sistema com valores padrão (requer servidor em execução)
 - `import-database.js`: Importa dados para o banco de dados
 
 ### Verificação de Código
