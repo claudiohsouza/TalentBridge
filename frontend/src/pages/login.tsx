@@ -89,11 +89,13 @@ export default function Login() {
       {/* Content */}
       <div className="relative z-10 max-w-md w-full px-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold">
-            <span className="bg-gradient-to-r from-cursor-primary to-cursor-secondary bg-clip-text text-transparent">
-              TalentBridge
-            </span>
-          </h1>
+          <Link to="/" className="inline-block">
+            <h1 className="text-3xl font-bold">
+              <span className="bg-gradient-to-r from-cursor-primary to-cursor-secondary bg-clip-text text-transparent">
+                TalentBridge
+              </span>
+            </h1>
+          </Link>
         </div>
         
         <div className="card p-6 animate-fade-in">
@@ -155,6 +157,15 @@ export default function Login() {
               Não tem conta?{' '}
               <Link to="/cadastro" className="text-cursor-primary hover:text-cursor-primary-dark transition-colors">
                 Cadastre-se
+              </Link>
+            </p>
+            
+            <p className="mt-3">
+              <Link to="/" className="text-cursor-text-secondary hover:text-cursor-text-primary flex items-center justify-center gap-1 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Voltar para a página inicial
               </Link>
             </p>
           </div>

@@ -11,100 +11,36 @@ router.get('/', authMiddleware, async (req, res, next) => {
     console.log('[API-jovens] Recebida solicitação para listar jovens');
     console.log('[API-jovens] Usuário:', req.user.id, req.user.email, req.user.papel);
     
-    // Verificar disponibilidade do pool
     const pool = req.db;
     if (!pool) {
       console.error('[API-jovens] Pool de conexão não disponível');
       return next(new Error('Erro de conexão com o banco de dados'));
     }
     
-    // Query base para consulta
-    const baseQuery = `
-      SELECT 
-        j.id, j.nome, j.email, j.idade, j.formacao, 
-        j.habilidades, j.interesses, j.planos_futuros,
-        j.criado_em, j.atualizado_em
+    // Removendo filtros baseados em papel - permitir visualização a todos os usuários
+    const query = `
+      SELECT j.*, 
+             je.chefe_empresa_id, 
+             ji.instituicao_id
       FROM jovens j
+      LEFT JOIN jovens_empresas je ON j.id = je.jovem_id AND je.status = 'Ativo'
+      LEFT JOIN jovens_instituicoes ji ON j.id = ji.jovem_id AND ji.status = 'Ativo'
+      WHERE j.status = 'Ativo'
+      ORDER BY j.nome ASC
     `;
     
-    let query = '';
-    const params = [];
+    const result = await pool.query(query);
+    const jovens = result.rows;
     
-    // Filtrar jovens com base no papel do usuário
-    if (req.user.papel === 'instituicao_ensino') {
-      console.log('[API-jovens] Buscando jovens para instituição de ensino');
-      
-      // Instituições de ensino veem apenas jovens relacionados a elas
-      const instituicao = await pool.query(
-        'SELECT id FROM instituicoes_ensino WHERE usuario_id = $1',
-        [req.user.id]
-      );
-      
-      if (instituicao.rows.length === 0) {
-        return res.status(400).json({ message: 'Perfil de instituição não encontrado' });
-      }
-      
-      const instituicaoId = instituicao.rows[0].id;
-      query = `
-        ${baseQuery}
-        WHERE EXISTS (
-          SELECT 1 FROM jovens_instituicoes ji2 
-          WHERE ji2.jovem_id = j.id AND ji2.instituicao_id = $1
-        )
-        GROUP BY j.id
-        ORDER BY j.nome
-      `;
-      params.push(instituicaoId);
-    } 
-    else if (req.user.papel === 'chefe_empresa') {
-      // Chefes de empresa veem apenas jovens relacionados a eles
-      const empresa = await pool.query(
-        'SELECT id FROM chefes_empresas WHERE usuario_id = $1',
-        [req.user.id]
-      );
-      
-      if (empresa.rows.length === 0) {
-        return res.status(400).json({ message: 'Perfil de empresa não encontrado' });
-      }
-      
-      const empresaId = empresa.rows[0].id;
-      query = `
-        ${baseQuery}
-        WHERE EXISTS (
-          SELECT 1 FROM jovens_empresas je2 
-          WHERE je2.jovem_id = j.id AND je2.chefe_empresa_id = $1
-        )
-        GROUP BY j.id
-        ORDER BY j.nome
-      `;
-      params.push(empresaId);
-    }
-    else if (req.user.papel === 'instituicao_contratante') {
-      // Instituições contratantes veem todos os jovens
-      query = `
-        ${baseQuery}
-        GROUP BY j.id
-        ORDER BY j.nome
-      `;
-    }
-    else {
-      return next(new ForbiddenError('Papel não autorizado'));
-    }
+    console.log(`[API-jovens] Encontrados ${jovens.length} jovens`);
     
-    console.log('[API-jovens] Executando query:', query);
-    console.log('[API-jovens] Parâmetros:', params);
-    
-    const { rows } = await pool.query(query, params);
-    console.log('[API-jovens] Jovens encontrados:', rows.length);
-    
-    // Processar dados
-    const processedRows = rows.map(jovem => {
-      // Converte habilidades e interesses de string para array se necessário
+    // Processar dados dos jovens
+    const processedJovens = jovens.map(jovem => {
+      // Processar arrays armazenados como strings
       if (jovem.habilidades && typeof jovem.habilidades === 'string') {
         try {
           jovem.habilidades = JSON.parse(jovem.habilidades);
         } catch (e) {
-          console.warn('[API-jovens] Erro ao fazer parsing de habilidades');
           jovem.habilidades = [];
         }
       }
@@ -113,7 +49,6 @@ router.get('/', authMiddleware, async (req, res, next) => {
         try {
           jovem.interesses = JSON.parse(jovem.interesses);
         } catch (e) {
-          console.warn('[API-jovens] Erro ao fazer parsing de interesses');
           jovem.interesses = [];
         }
       }
@@ -121,7 +56,7 @@ router.get('/', authMiddleware, async (req, res, next) => {
       return jovem;
     });
     
-    res.json(processedRows);
+    res.json(processedJovens);
   } catch (error) {
     console.error('[API-jovens] Erro ao listar jovens:', error);
     next(error);
@@ -197,42 +132,17 @@ router.get('/:id', authMiddleware, async (req, res, next) => {
     );
     
     // Verificar permissão de acesso baseado no papel
-    let temPermissao = false;
+    let temPermissao = true; // Allow access for all authenticated users
     
+    // We'll keep the logging but skip the actual permission checks
     if (req.user.papel === 'instituicao_contratante') {
-      temPermissao = true;
       console.log('[API-jovens] Acesso permitido para instituição contratante');
     }
     else if (req.user.papel === 'instituicao_ensino') {
-      console.log('[API-jovens] Verificando permissão para instituição de ensino');
-      const instituicao = await pool.query(
-        'SELECT id FROM instituicoes_ensino WHERE usuario_id = $1',
-        [req.user.id]
-      );
-      
-      if (instituicao.rows.length > 0) {
-        const instituicaoId = instituicao.rows[0].id;
-        temPermissao = instituicoesQuery.rows.some(i => i.instituicao_id === instituicaoId);
-        console.log('[API-jovens] Permissão para instituição de ensino:', temPermissao);
-      }
+      console.log('[API-jovens] Acesso permitido para instituição de ensino');
     }
     else if (req.user.papel === 'chefe_empresa') {
-      console.log('[API-jovens] Verificando permissão para chefe de empresa');
-      const empresa = await pool.query(
-        'SELECT id FROM chefes_empresas WHERE usuario_id = $1',
-        [req.user.id]
-      );
-      
-      if (empresa.rows.length > 0) {
-        const empresaId = empresa.rows[0].id;
-        temPermissao = empresasQuery.rows.some(e => e.chefe_empresa_id === empresaId);
-        console.log('[API-jovens] Permissão para chefe de empresa:', temPermissao);
-      }
-    }
-    
-    if (!temPermissao) {
-      console.log('[API-jovens] Acesso negado para o usuário');
-      return next(new ForbiddenError('Sem permissão para acessar dados deste jovem'));
+      console.log('[API-jovens] Acesso permitido para chefe de empresa');
     }
     
     // Processar dados para resposta

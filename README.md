@@ -40,19 +40,20 @@ TalentBridge é uma plataforma dedicada a conectar jovens talentos com oportunid
    npm install
    ```
 
-3. Crie um arquivo `.env` baseado no exemplo:
+3. Configuração do ambiente:
+   O projeto já contém um arquivo `.env` para desenvolvimento. Para produção, você deve criar seu próprio arquivo com configurações seguras:
    ```
    # Configurações do Banco de Dados
    DB_USER=postgres
-   DB_PASSWORD=1234
+   DB_PASSWORD=suasenhasegura
    DB_HOST=localhost
    DB_NAME=Data1
    DB_PORT=5432
 
    # Configurações do Servidor
    PORT=3001
-   NODE_ENV=development
-   FRONTEND_URL=http://localhost:3000
+   NODE_ENV=production
+   FRONTEND_URL=https://seu-dominio.com
 
    # Configurações de Segurança
    JWT_SECRET=sua_chave_secreta_de_producao_deve_ser_longa_e_aleatoria
@@ -156,7 +157,7 @@ O sistema utiliza:
 ## 📚 Scripts Utilitários
 
 ### Scripts de Inicialização
-- `init-opcoes.js`: Inicializa as opções do sistema (requer credenciais de administrador)
+- `init-opcoes.js`: Inicializa as opções do sistema com valores padrão
 - `import-database.js`: Importa dados para o banco de dados
 
 ### Verificação de Código

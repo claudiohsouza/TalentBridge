@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { FaHome, FaUser, FaSignOutAlt, FaSignInAlt, FaUserPlus, FaTachometerAlt } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { FaHome, FaSignInAlt, FaUserPlus, FaUserGraduate, FaPlus, FaCog, FaUserCircle, FaSignOutAlt, FaBars } from 'react-icons/fa';
 
 const Navbar: React.FC = () => {
+  const { isAuthenticated, user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
+  
+  // Check if current location is home page
+  const isHomePage = location.pathname === '/';
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -37,101 +41,121 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-cursor-background border-b border-cursor-border sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-xl font-bold bg-gradient-to-r from-cursor-primary to-cursor-secondary bg-clip-text text-transparent">
-                TalentBridge
-              </span>
-            </Link>
-          </div>
-          
-          {/* Desktop menu */}
-          <div className="hidden md:flex items-center space-x-1">
-            <Link to="/" className={linkClass('/')}>
-              <FaHome className="h-5 w-5" />
-              Home
-            </Link>
-            
-            {isAuthenticated ? (
-              <>
+    <nav className="bg-cursor-background-card border-b border-cursor-border py-3 px-4 md:px-6 relative z-50">
+      <div className="flex justify-between items-center">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2">
+          <span className="font-bold text-xl text-cursor-text-primary">
+            TalentBridge
+          </span>
+        </Link>
+        
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-2">
+          {isAuthenticated ? (
+            <>
+              {/* Only show Home button if not on home page */}
+              {!isHomePage && (
                 <Link 
-                  to={getDashboardPath()} 
-                  className={linkClass(getDashboardPath())}
+                  to="/" 
+                  className="nav-link"
                 >
-                  <FaUserGraduate className="h-5 w-5" />
-                  Dashboard
+                  <FaHome className="h-5 w-5" />
+                  <span>Home</span>
                 </Link>
+              )}
+                
+              <Link 
+                to={getDashboardPath()} 
+                className="nav-link"
+              >
+                <FaTachometerAlt className="h-5 w-5" />
+                <span>Dashboard</span>
+              </Link>
+                
+              <Link 
+                to="/perfil" 
+                className="nav-link"
+              >
+                <FaUser className="h-5 w-5" />
+                <span>Perfil</span>
+              </Link>
+                
+              <button 
+                onClick={logout}
+                className="nav-link text-cursor-error"
+              >
+                <FaSignOutAlt className="h-5 w-5" />
+                <span>Sair</span>
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Only show Home button if not on home page */}
+              {!isHomePage && (
                 <Link 
-                  to="/perfil" 
-                  className={linkClass('/perfil')}
+                  to="/" 
+                  className="nav-link"
                 >
-                  <FaUserCircle className="h-5 w-5" />
-                  Perfil
+                  <FaHome className="h-5 w-5" />
+                  <span>Home</span>
                 </Link>
-                <button 
-                  onClick={logout}
-                  className="btn-primary ml-2 flex items-center gap-2"
-                >
-                  <FaSignOutAlt className="h-5 w-5" />
-                  Sair
-                </button>
-              </>
-            ) : (
-              <>
-                <Link 
-                  to="/login" 
-                  className={linkClass('/login')}
-                >
-                  <FaSignInAlt className="h-5 w-5" />
-                  Login
-                </Link>
-                <Link 
-                  to="/cadastro" 
-                  className="btn-primary ml-2 flex items-center gap-2"
-                >
-                  <FaUserPlus className="h-5 w-5" />
-                  Cadastro
-                </Link>
-              </>
-            )}
-          </div>
-          
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <button 
-              onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-lg text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-background-light focus:outline-none transition-colors duration-200"
-            >
-              <FaBars className="h-6 w-6" />
-            </button>
-          </div>
+              )}
+                
+              <Link 
+                to="/login" 
+                className="nav-link"
+              >
+                <FaSignInAlt className="h-5 w-5" />
+                <span>Login</span>
+              </Link>
+                
+              <Link 
+                to="/cadastro" 
+                className="btn-primary"
+              >
+                <FaUserPlus className="h-5 w-5" />
+                <span>Cadastro</span>
+              </Link>
+            </>
+          )}
+        </div>
+        
+        {/* Mobile menu button */}
+        <div className="md:hidden flex items-center">
+          <button 
+            onClick={toggleMenu}
+            className="inline-flex items-center justify-center p-2 rounded-lg text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-background-light focus:outline-none transition-colors duration-200"
+          >
+            <FaTachometerAlt className="h-6 w-6" />
+          </button>
         </div>
       </div>
       
       {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden animate-slide-down">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-cursor-background-light border-t border-cursor-border">
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-background-card transition-colors duration-200"
-              onClick={closeMenu}
-            >
-              <FaHome className="h-5 w-5" />
-              Home
-            </Link>
-            
+      <div className={`md:hidden ${isMenuOpen ? 'fixed inset-0 bg-black bg-opacity-50 z-50' : 'hidden'}`} onClick={closeMenu}>
+        <div className="absolute right-0 top-0 h-screen w-64 bg-cursor-background-card shadow-lg p-4" onClick={e => e.stopPropagation()}>
+          <div className="flex flex-col space-y-4">
             {isAuthenticated ? (
               <>
+                {/* Only show Home button if not on home page */}
+                {!isHomePage && (
+                  <Link 
+                    to="/" 
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-background-card transition-colors duration-200"
+                    onClick={closeMenu}
+                  >
+                    <FaHome className="h-5 w-5" />
+                    Home
+                  </Link>
+                )}
+                
                 <Link 
                   to={getDashboardPath()} 
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-background-card transition-colors duration-200"
                   onClick={closeMenu}
                 >
-                  <FaUserGraduate className="h-5 w-5" />
+                  <FaTachometerAlt className="h-5 w-5" />
                   Dashboard
                 </Link>
                 <Link 
@@ -139,14 +163,11 @@ const Navbar: React.FC = () => {
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-background-card transition-colors duration-200"
                   onClick={closeMenu}
                 >
-                  <FaUserCircle className="h-5 w-5" />
+                  <FaUser className="h-5 w-5" />
                   Perfil
                 </Link>
                 <button 
-                  onClick={() => {
-                    closeMenu();
-                    logout();
-                  }}
+                  onClick={logout}
                   className="btn-primary w-full flex items-center gap-2 justify-center"
                 >
                   <FaSignOutAlt className="h-5 w-5" />
@@ -155,6 +176,18 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <>
+                {/* Only show Home button if not on home page */}
+                {!isHomePage && (
+                  <Link 
+                    to="/" 
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-background-card transition-colors duration-200"
+                    onClick={closeMenu}
+                  >
+                    <FaHome className="h-5 w-5" />
+                    Home
+                  </Link>
+                )}
+                
                 <Link 
                   to="/login" 
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-background-card transition-colors duration-200"
@@ -175,7 +208,7 @@ const Navbar: React.FC = () => {
             )}
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };

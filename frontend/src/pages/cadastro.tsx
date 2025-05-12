@@ -886,12 +886,23 @@ export default function Cadastro() {
             )}
             
             <div className="flex items-center justify-between pt-6 border-t border-cursor-border">
-              <Link 
-                to="/login"
-                className="text-cursor-text-secondary hover:text-cursor-text-primary transition-colors"
-              >
-                Já tem conta? Faça login
-              </Link>
+              <div className="flex flex-col space-y-2">
+                <Link 
+                  to="/login"
+                  className="text-cursor-text-secondary hover:text-cursor-text-primary transition-colors"
+                >
+                  Já tem conta? Faça login
+                </Link>
+                <Link 
+                  to="/" 
+                  className="text-cursor-text-secondary hover:text-cursor-text-primary flex items-center gap-1 transition-colors text-sm"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Voltar para a página inicial
+                </Link>
+              </div>
               
               <button 
                 type="submit" 
