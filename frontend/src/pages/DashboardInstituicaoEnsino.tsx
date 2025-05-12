@@ -1,31 +1,45 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Jovem } from '../types';
+import { Jovem, Oportunidade } from '../types';
 
 const DashboardInstituicaoEnsino: React.FC = () => {
   const { user } = useAuth();
   const [jovens, setJovens] = useState<Jovem[]>([]);
+  const [oportunidades, setOportunidades] = useState<Oportunidade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchJovens = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/jovens', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+        const token = localStorage.getItem('token');
+        
+        // Buscar jovens
+        const jovensResponse = await fetch('/api/jovens', {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!response.ok) {
+        if (!jovensResponse.ok) {
           throw new Error('Erro ao carregar jovens');
         }
 
-        const data = await response.json();
-        setJovens(data);
+        // Buscar oportunidades
+        const opResponse = await fetch('/api/oportunidades', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!opResponse.ok) {
+          throw new Error('Erro ao carregar oportunidades');
+        }
+
+        const jovensData = await jovensResponse.json();
+        const opData = await opResponse.json();
+        
+        setJovens(jovensData);
+        setOportunidades(opData);
         setLoading(false);
       } catch (error) {
         console.error('Erro:', error);
@@ -34,8 +48,11 @@ const DashboardInstituicaoEnsino: React.FC = () => {
       }
     };
 
-    fetchJovens();
+    fetchData();
   }, []);
+
+  // Filtrar apenas oportunidades abertas
+  const oportunidadesAbertas = oportunidades.filter(op => op.status === 'Aberta');
 
   const handleNovoJovem = () => {
     navigate('/instituicao-ensino/jovens/novo');
@@ -56,7 +73,7 @@ const DashboardInstituicaoEnsino: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="card p-6 hover:border-cursor-primary transition-colors duration-300">
             <h2 className="text-lg font-semibold text-cursor-text-primary mb-2">Jovens Cadastrados</h2>
-            <p className="text-3xl font-bold text-cursor-primary">{jovens.length}</p>
+            <p className="text-3xl font-bold text-cursor-primary">{loading ? '-' : jovens.length}</p>
             <Link 
               to="/instituicao-ensino/jovens" 
               className="text-cursor-primary text-sm mt-2 inline-flex items-center hover:text-cursor-primary-dark transition-colors"
@@ -70,7 +87,9 @@ const DashboardInstituicaoEnsino: React.FC = () => {
 
           <div className="card p-6 hover:border-cursor-primary transition-colors duration-300">
             <h2 className="text-lg font-semibold text-cursor-text-primary mb-2">Oportunidades Disponíveis</h2>
-            <p className="text-3xl font-bold text-cursor-primary">-</p>
+            <p className="text-3xl font-bold text-cursor-primary">
+              {loading ? '-' : oportunidadesAbertas.length}
+            </p>
             <Link 
               to="/instituicao-ensino/oportunidades" 
               className="text-cursor-primary text-sm mt-2 inline-flex items-center hover:text-cursor-primary-dark transition-colors"

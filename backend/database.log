@@ -63,3 +63,48 @@
 {"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-08T00:12:03.392Z"}
 {"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-08T00:12:11.783Z"}
 {"level":"info","message":"Encerrando conexões com o banco de dados...","service":"db-connect","timestamp":"2025-05-08T00:20:46.944Z"}
+{"database":"Data1","host":"localhost","level":"info","message":"Configuração de banco de dados:","port":5432,"service":"db-connect","timestamp":"2025-05-12T14:53:39.836Z","user":"postgres"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T14:53:40.277Z"}
+{"level":"info","message":"Conexão com banco de dados estabelecida com sucesso","service":"db-connect","timestamp":"2025-05-12T14:53:40.278Z"}
+{"level":"info","message":"Consulta de teste executada:","service":"db-connect","timestamp":"2025-05-12T14:53:40.279Z"}
+{"count":9,"level":"info","message":"Tabelas encontradas:","service":"db-connect","tables":["usuarios","instituicoes_ensino","chefes_empresas","instituicoes_contratantes","jovens_instituicoes","jovens","jovens_empresas","oportunidades","recomendacoes"],"timestamp":"2025-05-12T14:53:40.299Z"}
+{"database":"Data1","host":"localhost","level":"info","message":"Configuração de banco de dados:","port":5432,"service":"db-connect","timestamp":"2025-05-12T15:08:07.415Z","user":"postgres"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:08:07.663Z"}
+{"level":"info","message":"Conexão com banco de dados estabelecida com sucesso","service":"db-connect","timestamp":"2025-05-12T15:08:07.665Z"}
+{"level":"info","message":"Consulta de teste executada:","service":"db-connect","timestamp":"2025-05-12T15:08:07.666Z"}
+{"count":9,"level":"info","message":"Tabelas encontradas:","service":"db-connect","tables":["usuarios","instituicoes_ensino","chefes_empresas","instituicoes_contratantes","jovens_instituicoes","jovens","jovens_empresas","oportunidades","recomendacoes"],"timestamp":"2025-05-12T15:08:07.674Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:08:56.881Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:09:14.462Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:09:39.374Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:09:49.987Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:11:12.486Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:11:47.476Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:11:50.362Z"}
+{"level":"info","message":"Encerrando conexões com o banco de dados...","service":"db-connect","timestamp":"2025-05-12T15:13:26.779Z"}
+{"database":"Data1","host":"localhost","level":"info","message":"Configuração de banco de dados:","port":5432,"service":"db-connect","timestamp":"2025-05-12T15:13:36.600Z","user":"postgres"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:13:36.841Z"}
+{"level":"info","message":"Conexão com banco de dados estabelecida com sucesso","service":"db-connect","timestamp":"2025-05-12T15:13:36.842Z"}
+{"level":"info","message":"Consulta de teste executada:","service":"db-connect","timestamp":"2025-05-12T15:13:36.843Z"}
+{"count":9,"level":"info","message":"Tabelas encontradas:","service":"db-connect","tables":["usuarios","instituicoes_ensino","chefes_empresas","instituicoes_contratantes","jovens_instituicoes","jovens","jovens_empresas","oportunidades","recomendacoes"],"timestamp":"2025-05-12T15:13:36.851Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:14:01.486Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:15:48.452Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:15:48.456Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:16:26.394Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:16:26.397Z"}
+{"level":"info","message":"Encerrando conexões com o banco de dados...","service":"db-connect","timestamp":"2025-05-12T15:19:57.503Z"}
+{"database":"Data1","host":"localhost","level":"info","message":"Configuração de banco de dados:","port":5432,"service":"db-connect","timestamp":"2025-05-12T15:20:08.030Z","user":"postgres"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:20:08.269Z"}
+{"level":"info","message":"Conexão com banco de dados estabelecida com sucesso","service":"db-connect","timestamp":"2025-05-12T15:20:08.270Z"}
+{"level":"info","message":"Consulta de teste executada:","service":"db-connect","timestamp":"2025-05-12T15:20:08.271Z"}
+{"count":9,"level":"info","message":"Tabelas encontradas:","service":"db-connect","tables":["usuarios","instituicoes_ensino","chefes_empresas","instituicoes_contratantes","jovens_instituicoes","jovens","jovens_empresas","oportunidades","recomendacoes"],"timestamp":"2025-05-12T15:20:08.278Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:20:32.515Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:22:44.534Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:24:40.652Z"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T15:24:51.695Z"}
+{"level":"info","message":"Encerrando conexões com o banco de dados...","service":"db-connect","timestamp":"2025-05-12T15:25:19.452Z"}
+{"database":"Data1","host":"localhost","level":"info","message":"Configuração de banco de dados:","port":5432,"service":"db-connect","timestamp":"2025-05-12T19:28:32.791Z","user":"postgres"}
+{"level":"info","message":"Nova conexão de banco de dados estabelecida","service":"db-connect","timestamp":"2025-05-12T19:28:33.150Z"}
+{"level":"info","message":"Conexão com banco de dados estabelecida com sucesso","service":"db-connect","timestamp":"2025-05-12T19:28:33.151Z"}
+{"level":"info","message":"Consulta de teste executada:","service":"db-connect","timestamp":"2025-05-12T19:28:33.152Z"}
+{"count":9,"level":"info","message":"Tabelas encontradas:","service":"db-connect","tables":["usuarios","instituicoes_ensino","chefes_empresas","instituicoes_contratantes","jovens_instituicoes","jovens","jovens_empresas","oportunidades","recomendacoes"],"timestamp":"2025-05-12T19:28:33.163Z"}
+{"level":"info","message":"Encerrando conexões com o banco de dados...","service":"db-connect","timestamp":"2025-05-12T19:29:45.630Z"}
