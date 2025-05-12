@@ -12,70 +12,97 @@ router.get('/', authMiddleware, async (req, res, next) => {
     console.log('[API-oportunidades] Usuário:', req.user.id, req.user.email, req.user.papel);
     
     const pool = req.db;
-    if (!pool) {
-      console.error('[API-oportunidades] Pool de conexão não disponível');
-      throw new Error('Erro de conexão com o banco de dados');
-    }
-    let query;
-    const params = [];
-
-    query = `
+    
+    // Consultar filtros
+    const { status, tipo, data_inicio, data_fim, termo } = req.query;
+    
+    // Base da query com aliases corretos e contagem de recomendações
+    let query = `
       SELECT o.*, 
              ic.tipo as instituicao_tipo,
              u.nome as instituicao_nome,
-             COUNT(r.id) as total_recomendacoes
+             ic.areas_interesse->>0 as area,
+             (SELECT COUNT(*) FROM recomendacoes r WHERE r.oportunidade_id = o.id) as total_recomendacoes
       FROM oportunidades o
       JOIN instituicoes_contratantes ic ON o.instituicao_id = ic.id
       JOIN usuarios u ON ic.usuario_id = u.id
-      LEFT JOIN recomendacoes r ON o.id = r.oportunidade_id
     `;
     
-    // Filtrar por instituição contratante específica se for o próprio usuário
-    if (req.user.papel === 'instituicao_contratante') {
-      const instituicao = await pool.query(
-        'SELECT id FROM instituicoes_contratantes WHERE usuario_id = $1',
-        [req.user.id]
-      );
-      
-      if (instituicao.rows.length > 0) {
-        const instituicaoId = instituicao.rows[0].id;
-        query += ' WHERE o.instituicao_id = $1';
-        params.push(instituicaoId);
-      }
+    // Construir cláusulas WHERE
+    const whereConditions = [];
+    const params = [];
+    
+    // Remover filtro por papel de usuário - permitir acesso a todos
+
+    if (status) {
+      params.push(status);
+      whereConditions.push(`o.status = $${params.length}`);
     }
     
-    // Agrupar e ordenar
-    query += ' GROUP BY o.id, ic.tipo, u.nome ORDER BY o.criado_em DESC';
+    if (tipo) {
+      params.push(tipo);
+      whereConditions.push(`o.tipo = $${params.length}`);
+    }
     
-    console.log('[API-oportunidades] Executando query:', query);
+    if (data_inicio) {
+      params.push(data_inicio);
+      whereConditions.push(`o.data_inicio >= $${params.length}`);
+    }
+    
+    if (data_fim) {
+      params.push(data_fim);
+      whereConditions.push(`o.data_fim <= $${params.length}`);
+    }
+    
+    if (termo) {
+      params.push(`%${termo}%`);
+      whereConditions.push(`(o.titulo ILIKE $${params.length} OR o.descricao ILIKE $${params.length})`);
+    }
+    
+    // Adicionar WHERE se houver condições
+    if (whereConditions.length > 0) {
+      query += ` WHERE ${whereConditions.join(' AND ')}`;
+    }
+    
+    // Ordenação e limites
+    query += ` ORDER BY o.data_inicio DESC, o.criado_em DESC`;
+    
+    console.log('[API-oportunidades] Query SQL:', query);
     console.log('[API-oportunidades] Parâmetros:', params);
     
-    const { rows } = await pool.query(query, params);
-    console.log('[API-oportunidades] Oportunidades encontradas:', rows.length);
+    const result = await pool.query(query, params);
     
-    // Processar dados
-    const processedRows = rows.map(oportunidade => {
-      // Converter campos JSON se necessário
-      if (oportunidade.requisitos && typeof oportunidade.requisitos === 'string') {
+    // Processar resultados
+    const oportunidades = result.rows.map(opp => {
+      if (opp.requisitos && typeof opp.requisitos === 'string') {
         try {
-          oportunidade.requisitos = JSON.parse(oportunidade.requisitos);
+          opp.requisitos = JSON.parse(opp.requisitos);
         } catch (e) {
-          console.warn('[API-oportunidades] Erro ao fazer parsing de requisitos');
+          opp.requisitos = [];
         }
       }
       
-      if (oportunidade.beneficios && typeof oportunidade.beneficios === 'string') {
+      if (opp.beneficios && typeof opp.beneficios === 'string') {
         try {
-          oportunidade.beneficios = JSON.parse(oportunidade.beneficios);
+          opp.beneficios = JSON.parse(opp.beneficios);
         } catch (e) {
-          console.warn('[API-oportunidades] Erro ao fazer parsing de beneficios');
+          opp.beneficios = [];
         }
       }
       
-      return oportunidade;
+      // Garantir que o campo area existe
+      if (!opp.area) {
+        opp.area = 'Não especificada';
+      }
+      
+      // Converter total_recomendacoes para número
+      opp.total_recomendacoes = parseInt(opp.total_recomendacoes || 0, 10);
+      
+      return opp;
     });
     
-    res.json(processedRows);
+    console.log(`[API-oportunidades] Retornando ${oportunidades.length} oportunidades`);
+    res.json(oportunidades);
   } catch (error) {
     console.error('[API-oportunidades] Erro ao listar oportunidades:', error);
     next(error);
