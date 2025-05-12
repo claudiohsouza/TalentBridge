@@ -8,19 +8,44 @@ export default function Login() {
     email: '',
     senha: ''
   });
-  const [erro, setErro] = useState('');
+  const [erro, setErro] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Limpar mensagem de erro ao editar
+    setErro(null);
+    
+    // Validar email quando o campo de email for alterado
+    if (name === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (value && !emailRegex.test(value)) {
+        setEmailError('Por favor, insira um email válido (exemplo@dominio.com)');
+      } else {
+        setEmailError(null);
+      }
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErro('');
+    
+    // Validar email antes de tentar login
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setEmailError('Por favor, insira um email válido (exemplo@dominio.com)');
+      return;
+    }
+    
+    setErro(null);
     setLoading(true);
     
     try {
@@ -108,11 +133,14 @@ export default function Login() {
                 type="email"
                 name="email"
                 placeholder="email@exemplo.com"
-                className="input-field"
+                className={`input-field ${emailError ? 'border-cursor-error' : ''}`}
                 value={formData.email}
                 onChange={handleChange}
                 required
               />
+              {emailError && (
+                <p className="text-cursor-error text-sm mt-1">{emailError}</p>
+              )}
             </div>
             
             <div>
