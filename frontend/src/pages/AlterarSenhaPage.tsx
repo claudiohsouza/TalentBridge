@@ -34,7 +34,7 @@ const AlterarSenhaPage: React.FC = () => {
     setLoading(true);
     
     try {
-      await usuarioService.atualizarPerfil({
+      await usuarioService.alterarSenha({
         senhaAtual,
         novaSenha
       });
@@ -53,7 +53,7 @@ const AlterarSenhaPage: React.FC = () => {
       }, 2000);
     } catch (err: any) {
       setFeedback({
-        mensagem: err.response?.data?.erro || 'Erro ao alterar senha',
+        mensagem: err.response?.data?.message || 'Erro ao alterar senha',
         tipo: 'error'
       });
     } finally {

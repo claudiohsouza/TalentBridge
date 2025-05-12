@@ -3,6 +3,38 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/api';
 import { opcoesService } from '../services/api';
 import { UserRole, RegisterRequest } from '../types';
+import { Checkbox, CheckboxGroup } from '@chakra-ui/react';
+
+// Lista de estados brasileiros
+const estados = [
+  { id: 1, sigla: 'AC', nome: 'Acre' },
+  { id: 2, sigla: 'AL', nome: 'Alagoas' },
+  { id: 3, sigla: 'AP', nome: 'Amapá' },
+  { id: 4, sigla: 'AM', nome: 'Amazonas' },
+  { id: 5, sigla: 'BA', nome: 'Bahia' },
+  { id: 6, sigla: 'CE', nome: 'Ceará' },
+  { id: 7, sigla: 'DF', nome: 'Distrito Federal' },
+  { id: 8, sigla: 'ES', nome: 'Espírito Santo' },
+  { id: 9, sigla: 'GO', nome: 'Goiás' },
+  { id: 10, sigla: 'MA', nome: 'Maranhão' },
+  { id: 11, sigla: 'MT', nome: 'Mato Grosso' },
+  { id: 12, sigla: 'MS', nome: 'Mato Grosso do Sul' },
+  { id: 13, sigla: 'MG', nome: 'Minas Gerais' },
+  { id: 14, sigla: 'PA', nome: 'Pará' },
+  { id: 15, sigla: 'PB', nome: 'Paraíba' },
+  { id: 16, sigla: 'PR', nome: 'Paraná' },
+  { id: 17, sigla: 'PE', nome: 'Pernambuco' },
+  { id: 18, sigla: 'PI', nome: 'Piauí' },
+  { id: 19, sigla: 'RJ', nome: 'Rio de Janeiro' },
+  { id: 20, sigla: 'RN', nome: 'Rio Grande do Norte' },
+  { id: 21, sigla: 'RS', nome: 'Rio Grande do Sul' },
+  { id: 22, sigla: 'RO', nome: 'Rondônia' },
+  { id: 23, sigla: 'RR', nome: 'Roraima' },
+  { id: 24, sigla: 'SC', nome: 'Santa Catarina' },
+  { id: 25, sigla: 'SP', nome: 'São Paulo' },
+  { id: 26, sigla: 'SE', nome: 'Sergipe' },
+  { id: 27, sigla: 'TO', nome: 'Tocantins' }
+];
 
 // Remover constantes hardcoded
 // const AREAS_INTERESSE_OPCOES = [ ... ]
@@ -48,6 +80,129 @@ interface FormErrors {
   geral?: string;
 }
 
+const opcoesEnsino = [
+  "Engenharia de Software", "Ciência da Computação", "Design Digital", "Administração", "Medicina",
+  "Mecatrônica", "Química", "Enfermagem", "Redes", "Segurança da Informação", "Matemática", "Física",
+  "Biologia", "Letras", "Direito", "Psicologia", "Economia", "Educação Física", "Arquitetura", "Engenharia Civil"
+];
+
+const opcoesAtuacao = [
+  "Desenvolvimento Web", "Inteligência Artificial", "Cloud Computing", "Mobile Apps", "Blockchain", "Fintech",
+  "Automação Industrial", "Logística", "Produção", "Sustentabilidade", "Marketing Digital", "Recursos Humanos",
+  "Vendas", "Pesquisa Científica", "Consultoria", "Gestão de Projetos", "UX/UI Design", "Suporte Técnico",
+  "Análise de Dados", "Empreendedorismo"
+];
+
+const tiposInstituicaoPreSet = [
+  'Universidade Pública',
+  'Universidade Privada',
+  'Instituto Federal',
+  'Escola Técnica',
+  'Centro Universitário',
+  'Faculdade',
+  'Colégio Técnico',
+  'Outro'
+];
+
+const setoresEmpresaPreSet = [
+  'Tecnologia',
+  'Manufatura',
+  'Serviços',
+  'Comércio',
+  'Educação',
+  'Saúde',
+  'Financeiro',
+  'Construção Civil',
+  'Agronegócio',
+  'Energia',
+  'Telecomunicações',
+  'Transporte e Logística',
+  'Outro'
+];
+
+const portesEmpresaPreSet = [
+  'Microempresa',
+  'Pequena Empresa',
+  'Média Empresa',
+  'Grande Empresa',
+  'Startup'
+];
+
+const faixasAlunos = [
+  { label: 'Até 100', value: '100' },
+  { label: '101 a 500', value: '500' },
+  { label: '501 a 1.000', value: '1000' },
+  { label: '1.001 a 5.000', value: '5000' },
+  { label: '5.001 a 10.000', value: '10000' },
+  { label: 'Mais de 10.000', value: '10001' }
+];
+
+const areasInteresseCategorizadas = {
+  'Tecnologia e Educação': [
+    'Tecnologia e Inovação',
+    'Educação e Capacitação',
+    'Inclusão Digital',
+    'Pesquisa e Desenvolvimento'
+  ],
+  'Desenvolvimento e Impacto Social': [
+    'Desenvolvimento Social',
+    'Cidadania e Direitos Humanos',
+    'Responsabilidade Social',
+    'Diversidade e Inclusão',
+    'Inovação Social'
+  ],
+  'Carreira e Profissional': [
+    'Empreendedorismo',
+    'Liderança e Gestão',
+    'Empregabilidade',
+    'Desenvolvimento Profissional'
+  ],
+  'Cultura e Bem-estar': [
+    'Cultura e Arte',
+    'Esporte e Lazer',
+    'Saúde e Bem-estar',
+    'Economia Criativa'
+  ],
+  'Sustentabilidade': [
+    'Sustentabilidade',
+    'Meio Ambiente',
+    'Voluntariado'
+  ]
+};
+
+const programasSociaisCategorizados = {
+  'Programas de Entrada': [
+    'Programa Jovem Aprendiz',
+    'Programa de Estágio',
+    'Primeiro Emprego',
+    'Programa de Trainee'
+  ],
+  'Desenvolvimento Profissional': [
+    'Mentoria Profissional',
+    'Capacitação Técnica',
+    'Formação Profissional',
+    'Desenvolvimento de Soft Skills'
+  ],
+  'Educação e Orientação': [
+    'Educação Financeira',
+    'Orientação Vocacional',
+    'Apoio Educacional',
+    'Programa de Bolsas'
+  ],
+  'Empreendedorismo e Liderança': [
+    'Empreendedorismo Jovem',
+    'Desenvolvimento de Lideranças',
+    'Incubadora de Projetos',
+    'Aceleração de Carreiras'
+  ],
+  'Inclusão e Diversidade': [
+    'Inclusão Digital',
+    'Inclusão Social',
+    'Programa de Voluntariado',
+    'Programa de Diversidade'
+  ]
+};
+
 export default function Cadastro() {
   const [formData, setFormData] = useState<FormData>({
     email: '',
@@ -71,39 +226,54 @@ export default function Cadastro() {
   const [sucesso, setSucesso] = useState(false);
   const navigate = useNavigate();
 
-  // Estado para armazenar opções carregadas do banco de dados
-  const [areasInteresse, setAreasInteresse] = useState<string[]>([]);
-  const [programasSociais, setProgramasSociais] = useState<string[]>([]);
+  // Estados para opções carregadas do backend
   const [tiposInstituicao, setTiposInstituicao] = useState<string[]>([]);
   const [tiposInstituicaoEnsino, setTiposInstituicaoEnsino] = useState<string[]>([]);
   const [setoresEmpresa, setSetoresEmpresa] = useState<string[]>([]);
   const [portesEmpresa, setPortesEmpresa] = useState<string[]>([]);
+  const [areasInteresse, setAreasInteresse] = useState<string[]>([]);
+  const [programasSociais, setProgramasSociais] = useState<string[]>([]);
+  const [areasEnsino, setAreasEnsino] = useState<string[]>([]);
+  const [areasAtuacao, setAreasAtuacao] = useState<string[]>([]);
   const [loadingOpcoes, setLoadingOpcoes] = useState(true);
 
-  // Carregar opções do banco de dados
+  // Dentro do componente, atualize o estado para incluir as categorias expandidas
+  const [expandedCategories, setExpandedCategories] = useState<{[key: string]: boolean}>({});
+
+  // Função para alternar a expansão de uma categoria
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
+  // Carregar opções do backend
   useEffect(() => {
     const carregarOpcoes = async () => {
       try {
         setLoadingOpcoes(true);
-        // Buscar todas as opções de uma vez
         const todasOpcoes = await opcoesService.obterTodasOpcoes();
         
-        // Atualizar estados com as opções retornadas
-        setAreasInteresse(todasOpcoes.areas_interesse || []);
-        setProgramasSociais(todasOpcoes.programas_sociais || []);
         setTiposInstituicao(todasOpcoes.tipos_instituicao || []);
         setTiposInstituicaoEnsino(todasOpcoes.tipos_instituicao_ensino || []);
         setSetoresEmpresa(todasOpcoes.setores_empresa || []);
         setPortesEmpresa(todasOpcoes.portes_empresa || []);
+        setAreasInteresse(todasOpcoes.areas_interesse || []);
+        setProgramasSociais(todasOpcoes.programas_sociais || []);
+        setAreasEnsino(todasOpcoes.areas_ensino || []);
+        setAreasAtuacao(todasOpcoes.areas_atuacao || []);
       } catch (error) {
-        console.error('Erro ao carregar opções do sistema:', error);
-        // Em caso de erro, definir valores padrão para não quebrar o formulário
-        setAreasInteresse(['Tecnologia', 'Educação', 'Administração']);
-        setProgramasSociais(['Programa Jovem Aprendiz', 'Programa de Estágio']);
+        console.error('Erro ao carregar opções:', error);
+        // Definir valores padrão em caso de erro
         setTiposInstituicao(['ONG', 'Fundação', 'Outro']);
         setTiposInstituicaoEnsino(['Universidade Pública', 'Universidade Privada', 'Outro']);
         setSetoresEmpresa(['Tecnologia', 'Serviços', 'Outro']);
         setPortesEmpresa(['Pequeno', 'Médio', 'Grande']);
+        setAreasInteresse(['Tecnologia', 'Educação', 'Outro']);
+        setProgramasSociais(['Jovem Aprendiz', 'Estágio', 'Outro']);
+        setAreasEnsino(['Tecnologia', 'Engenharia', 'Outro']);
+        setAreasAtuacao(['Desenvolvimento', 'Gestão', 'Outro']);
       } finally {
         setLoadingOpcoes(false);
       }
@@ -149,17 +319,21 @@ export default function Cadastro() {
   };
 
   // Função especial para lidar com arrays (habilidades, interesses, etc)
-  const handleArrayChange = (name: string, value: string) => {
-    // Converter string em array, preservando espaços nos itens
-    // Usamos uma expressão regular que separa apenas por vírgulas ou quebras de linha
-    // E depois fazemos trim de cada item para remover espaços extras no início/fim
-    const items = value
-      .split(/,|\n/)
-      .map(item => item.trim())
-      .filter(item => item !== '');
-    
+  const handleArrayChange = (name: string, value: string | string[]) => {
+    let items: string[] = [];
+    if (Array.isArray(value)) {
+      // Se for áreas de interesse, limitar a 4 opções
+      if (name === 'areas_interesse' && value.length > 4) {
+        return; // Não permite mais que 4 seleções
+      }
+      items = value;
+    } else {
+      items = value
+        .split(/,|\n/)
+        .map(item => item.trim())
+        .filter(item => item !== '');
+    }
     setFormData(prev => ({ ...prev, [name]: items }));
-    
     // Limpar erro do campo quando ele é modificado
     if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -327,54 +501,55 @@ export default function Cadastro() {
         return (
           <>
             <div>
-              <label className="block text-cursor-text-tertiary text-sm mb-1">Tipo da Instituição*</label>
+              <label className="block text-cursor-text-tertiary text-sm mb-1">Tipo de Instituição*</label>
               <select
                 name="tipo"
-                className={`w-full p-3 rounded-lg bg-cursor-bg text-cursor-text-primary border ${
-                  errors.tipo ? 'border-red-500' : 'border-cursor-border'
-                } focus:border-cursor-primary focus:outline-none`}
+                className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
                 value={formData.tipo}
                 onChange={handleChange}
                 required
-                disabled={loadingOpcoes}
               >
-                <option value="">Selecione um tipo</option>
+                <option value="">Selecione o tipo</option>
                 {tiposInstituicaoEnsino.map(tipo => (
-                  <option key={tipo} value={tipo}>{tipo}</option>
+                  <option key={tipo} value={tipo} className="text-white bg-[#1a1a1a]">{tipo}</option>
                 ))}
               </select>
               {errors.tipo && <p className="text-red-500 text-sm mt-1">{errors.tipo}</p>}
             </div>
             <div>
-              <label className="block text-cursor-text-tertiary text-sm mb-1">Áreas de Ensino*</label>
-              <textarea
-                name="areas_ensino"
-                placeholder="Tecnologia, Engenharia, Administração... (separadas por vírgula)"
-                className={`w-full p-3 rounded-lg bg-cursor-bg text-cursor-text-primary border ${
-                  errors.areas_ensino ? 'border-red-500' : 'border-cursor-border'
-                } focus:border-cursor-primary focus:outline-none`}
-                value={formData.areas_ensino?.join(', ')}
-                onChange={(e) => handleArrayChange('areas_ensino', e.target.value)}
-                rows={3}
-                required
-              />
-              {errors.areas_ensino && <p className="text-red-500 text-sm mt-1">{errors.areas_ensino}</p>}
-            </div>
-            <div>
-              <label className="block text-cursor-text-tertiary text-sm mb-1">Quantidade de Alunos*</label>
-              <input
-                type="number"
+              <label className="block text-cursor-text-tertiary text-sm mb-1">Faixa de Número de Alunos*</label>
+              <select
                 name="qtd_alunos"
-                placeholder="Ex: 1000"
-                className={`w-full p-3 rounded-lg bg-cursor-bg text-cursor-text-primary border ${
-                  errors.qtd_alunos ? 'border-red-500' : 'border-cursor-border'
-                } focus:border-cursor-primary focus:outline-none`}
+                className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
                 value={formData.qtd_alunos || ''}
                 onChange={handleChange}
-                min="1"
                 required
-              />
+              >
+                <option value="">Selecione a faixa</option>
+                {faixasAlunos.map(faixa => (
+                  <option key={faixa.value} value={faixa.value} className="text-white bg-[#1a1a1a]">{faixa.label}</option>
+                ))}
+              </select>
               {errors.qtd_alunos && <p className="text-red-500 text-sm mt-1">{errors.qtd_alunos}</p>}
+            </div>
+            <div>
+              <label className="block text-cursor-text-tertiary text-sm mb-1">Áreas de Ensino*</label>
+              <div className="p-3 rounded-lg bg-cursor-bg border border-cursor-border">
+                <CheckboxGroup
+                  colorScheme="blue"
+                  value={formData.areas_ensino || []}
+                  onChange={(val) => handleArrayChange('areas_ensino', val as string[])}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {areasEnsino.map((opcao) => (
+                      <Checkbox key={opcao} value={opcao} isChecked={formData.areas_ensino?.includes(opcao) || false}>
+                        {opcao}
+                      </Checkbox>
+                    ))}
+                  </div>
+                </CheckboxGroup>
+              </div>
+              {errors.areas_ensino && <p className="text-red-500 text-sm mt-1">{errors.areas_ensino}</p>}
             </div>
           </>
         );
@@ -400,17 +575,14 @@ export default function Cadastro() {
               <label className="block text-cursor-text-tertiary text-sm mb-1">Setor*</label>
               <select
                 name="setor"
-                className={`w-full p-3 rounded-lg bg-cursor-bg text-cursor-text-primary border ${
-                  errors.setor ? 'border-red-500' : 'border-cursor-border'
-                } focus:border-cursor-primary focus:outline-none`}
+                className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
                 value={formData.setor}
                 onChange={handleChange}
                 required
-                disabled={loadingOpcoes}
               >
-                <option value="">Selecione um setor</option>
+                <option value="">Selecione o setor</option>
                 {setoresEmpresa.map(setor => (
-                  <option key={setor} value={setor}>{setor}</option>
+                  <option key={setor} value={setor} className="text-white bg-[#1a1a1a]">{setor}</option>
                 ))}
               </select>
               {errors.setor && <p className="text-red-500 text-sm mt-1">{errors.setor}</p>}
@@ -419,34 +591,35 @@ export default function Cadastro() {
               <label className="block text-cursor-text-tertiary text-sm mb-1">Porte da Empresa*</label>
               <select
                 name="porte"
-                className={`w-full p-3 rounded-lg bg-cursor-bg text-cursor-text-primary border ${
-                  errors.porte ? 'border-red-500' : 'border-cursor-border'
-                } focus:border-cursor-primary focus:outline-none`}
+                className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
                 value={formData.porte}
                 onChange={handleChange}
                 required
-                disabled={loadingOpcoes}
               >
-                <option value="">Selecione um porte</option>
+                <option value="">Selecione o porte</option>
                 {portesEmpresa.map(porte => (
-                  <option key={porte} value={porte}>{porte}</option>
+                  <option key={porte} value={porte} className="text-white bg-[#1a1a1a]">{porte}</option>
                 ))}
               </select>
               {errors.porte && <p className="text-red-500 text-sm mt-1">{errors.porte}</p>}
             </div>
             <div>
               <label className="block text-cursor-text-tertiary text-sm mb-1">Áreas de Atuação*</label>
-              <textarea
-                name="areas_atuacao"
-                placeholder="Desenvolvimento de Software, Marketing Digital... (separadas por vírgula)"
-                className={`w-full p-3 rounded-lg bg-cursor-bg text-cursor-text-primary border ${
-                  errors.areas_atuacao ? 'border-red-500' : 'border-cursor-border'
-                } focus:border-cursor-primary focus:outline-none`}
-                value={formData.areas_atuacao?.join(', ')}
-                onChange={(e) => handleArrayChange('areas_atuacao', e.target.value)}
-                rows={3}
-                required
-              />
+              <div className="p-3 rounded-lg bg-cursor-bg border border-cursor-border">
+                <CheckboxGroup
+                  colorScheme="blue"
+                  value={formData.areas_atuacao || []}
+                  onChange={(val) => handleArrayChange('areas_atuacao', val as string[])}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {areasAtuacao.map((opcao) => (
+                      <Checkbox key={opcao} value={opcao} isChecked={formData.areas_atuacao?.includes(opcao) || false}>
+                        {opcao}
+                      </Checkbox>
+                    ))}
+                  </div>
+                </CheckboxGroup>
+              </div>
               {errors.areas_atuacao && <p className="text-red-500 text-sm mt-1">{errors.areas_atuacao}</p>}
             </div>
           </>
@@ -458,9 +631,7 @@ export default function Cadastro() {
               <label className="block text-cursor-text-tertiary text-sm mb-1">Tipo da Instituição*</label>
               <select
                 name="tipo"
-                className={`w-full p-3 rounded-lg bg-cursor-bg text-cursor-text-primary border ${
-                  errors.tipo ? 'border-red-500' : 'border-cursor-border'
-                } focus:border-cursor-primary focus:outline-none`}
+                className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
                 value={formData.tipo}
                 onChange={handleChange}
                 required
@@ -474,46 +645,47 @@ export default function Cadastro() {
               {errors.tipo && <p className="text-red-500 text-sm mt-1">{errors.tipo}</p>}
             </div>
             <div>
-              <label className="block text-cursor-text-tertiary text-sm mb-1">Áreas de Interesse*</label>
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 mt-2 p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333]">
-                {loadingOpcoes ? (
-                  <div className="col-span-2 text-center py-2">
-                    <p className="text-sm text-gray-500">Carregando opções...</p>
+              <label className="block text-cursor-text-tertiary text-sm mb-1">Áreas de Interesse* (máximo 4)</label>
+              <div className="p-3 rounded-lg bg-cursor-bg border border-cursor-border">
+                <CheckboxGroup
+                  colorScheme="blue"
+                  value={formData.areas_interesse || []}
+                  onChange={(val) => handleArrayChange('areas_interesse', val as string[])}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {areasInteresse.map((area) => (
+                      <Checkbox 
+                        key={area} 
+                        value={area}
+                        isDisabled={(formData.areas_interesse?.length || 0) >= 4 && !formData.areas_interesse?.includes(area)}
+                      >
+                        {area}
+                      </Checkbox>
+                    ))}
                   </div>
-                ) : areasInteresse.map((area) => (
-                  <div key={area} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`area-${area}`}
-                      checked={formData.areas_interesse?.includes(area) || false}
-                      onChange={(e) => handleCheckboxChange('areas_interesse', area, e.target.checked)}
-                      className="form-checkbox w-4 h-4 mr-2 bg-transparent border border-[#555] text-[#6366f1] focus:ring-[#6366f1] checked:border-[#6366f1] rounded"
-                    />
-                    <label htmlFor={`area-${area}`} className="text-sm text-white">{area}</label>
-                  </div>
-                ))}
+                </CheckboxGroup>
               </div>
+              {(formData.areas_interesse?.length || 0) >= 4 && (
+                <p className="text-yellow-500 text-sm mt-1">Limite máximo de 4 áreas atingido</p>
+              )}
               {errors.areas_interesse && <p className="text-red-500 text-sm mt-1">{errors.areas_interesse}</p>}
             </div>
             <div>
               <label className="block text-cursor-text-tertiary text-sm mb-1">Programas Sociais*</label>
-              <div className="grid grid-cols-1 sm:grid-cols-1 gap-2 mt-2 p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333]">
-                {loadingOpcoes ? (
-                  <div className="text-center py-2">
-                    <p className="text-sm text-gray-500">Carregando opções...</p>
+              <div className="p-3 rounded-lg bg-cursor-bg border border-cursor-border">
+                <CheckboxGroup
+                  colorScheme="blue"
+                  value={formData.programas_sociais || []}
+                  onChange={(val) => handleArrayChange('programas_sociais', val as string[])}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {programasSociais.map((programa) => (
+                      <Checkbox key={programa} value={programa}>
+                        {programa}
+                      </Checkbox>
+                    ))}
                   </div>
-                ) : programasSociais.map((programa) => (
-                  <div key={programa} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`programa-${programa}`}
-                      checked={formData.programas_sociais?.includes(programa) || false}
-                      onChange={(e) => handleCheckboxChange('programas_sociais', programa, e.target.checked)}
-                      className="form-checkbox w-4 h-4 mr-2 bg-transparent border border-[#555] text-[#6366f1] focus:ring-[#6366f1] checked:border-[#6366f1] rounded"
-                    />
-                    <label htmlFor={`programa-${programa}`} className="text-sm text-white">{programa}</label>
-                  </div>
-                ))}
+                </CheckboxGroup>
               </div>
               {errors.programas_sociais && <p className="text-red-500 text-sm mt-1">{errors.programas_sociais}</p>}
             </div>
@@ -637,17 +809,22 @@ export default function Cadastro() {
                 
                 <div>
                   <label className="block text-sm font-medium text-cursor-text-secondary mb-2">
-                    Localização
+                    Estado
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="localizacao"
                     value={formData.localizacao}
                     onChange={handleChange}
                     className="input-field"
-                    placeholder="Ex: São Paulo, SP"
                     required
-                  />
+                  >
+                    <option value="">Selecione um estado</option>
+                    {estados.map(estado => (
+                      <option key={estado.id} value={estado.sigla}>
+                        {estado.nome} ({estado.sigla})
+                      </option>
+                    ))}
+                  </select>
                   {errors.localizacao && (
                     <p className="mt-1 text-sm text-cursor-error">{errors.localizacao}</p>
                   )}
@@ -667,57 +844,60 @@ export default function Cadastro() {
                       <label className="block text-sm font-medium text-cursor-text-secondary mb-2">
                         Tipo de Instituição
                       </label>
-                      <input
-                        type="text"
+                      <select
                         name="tipo"
+                        className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
                         value={formData.tipo}
                         onChange={handleChange}
-                        className="input-field"
-                        placeholder="Ex: Universidade, Escola Técnica"
                         required
-                      />
-                      {errors.tipo && (
-                        <p className="mt-1 text-sm text-cursor-error">{errors.tipo}</p>
-                      )}
+                      >
+                        <option value="">Selecione o tipo</option>
+                        {tiposInstituicaoEnsino.map(tipo => (
+                          <option key={tipo} value={tipo} className="text-white bg-[#1a1a1a]">{tipo}</option>
+                        ))}
+                      </select>
+                      {errors.tipo && <p className="text-red-500 text-sm mt-1">{errors.tipo}</p>}
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium text-cursor-text-secondary mb-2">
-                        Número de Alunos
+                        Faixa de Número de Alunos
                       </label>
-                      <input
-                        type="number"
+                      <select
                         name="qtd_alunos"
-                        value={formData.qtd_alunos}
+                        className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
+                        value={formData.qtd_alunos || ''}
                         onChange={handleChange}
-                        className="input-field"
-                        placeholder="Ex: 1000"
                         required
-                      />
-                      {errors.qtd_alunos && (
-                        <p className="mt-1 text-sm text-cursor-error">{errors.qtd_alunos}</p>
-                      )}
+                      >
+                        <option value="">Selecione a faixa</option>
+                        {faixasAlunos.map(faixa => (
+                          <option key={faixa.value} value={faixa.value} className="text-white bg-[#1a1a1a]">{faixa.label}</option>
+                        ))}
+                      </select>
+                      {errors.qtd_alunos && <p className="text-red-500 text-sm mt-1">{errors.qtd_alunos}</p>}
                     </div>
                     
                     <div className="col-span-2">
                       <label className="block text-sm font-medium text-cursor-text-secondary mb-2">
                         Áreas de Ensino
                       </label>
-                      <textarea
-                        name="areas_ensino"
-                        value={formData.areas_ensino?.join('\n')}
-                        onChange={(e) => handleArrayChange('areas_ensino', e.target.value)}
-                        rows={4}
-                        className="input-field"
-                        placeholder="Digite uma área por linha&#10;Ex: Engenharia de Software&#10;Ciência da Computação&#10;Design Digital"
-                        required
-                      />
-                      <p className="mt-1 text-sm text-cursor-text-tertiary">
-                        Digite uma área por linha ou separe por vírgulas
-                      </p>
-                      {errors.areas_ensino && (
-                        <p className="mt-1 text-sm text-cursor-error">{errors.areas_ensino}</p>
-                      )}
+                      <div className="p-3 rounded-lg bg-cursor-bg border border-cursor-border">
+                        <CheckboxGroup
+                          colorScheme="blue"
+                          value={formData.areas_ensino || []}
+                          onChange={(val) => handleArrayChange('areas_ensino', val as string[])}
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {areasEnsino.map((opcao) => (
+                              <Checkbox key={opcao} value={opcao} isChecked={formData.areas_ensino?.includes(opcao) || false}>
+                                {opcao}
+                              </Checkbox>
+                            ))}
+                          </div>
+                        </CheckboxGroup>
+                      </div>
+                      {errors.areas_ensino && <p className="text-red-500 text-sm mt-1">{errors.areas_ensino}</p>}
                     </div>
                   </>
                 )}
@@ -746,57 +926,60 @@ export default function Cadastro() {
                       <label className="block text-sm font-medium text-cursor-text-secondary mb-2">
                         Setor
                       </label>
-                      <input
-                        type="text"
+                      <select
                         name="setor"
+                        className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
                         value={formData.setor}
                         onChange={handleChange}
-                        className="input-field"
-                        placeholder="Ex: Tecnologia"
                         required
-                      />
-                      {errors.setor && (
-                        <p className="mt-1 text-sm text-cursor-error">{errors.setor}</p>
-                      )}
+                      >
+                        <option value="">Selecione o setor</option>
+                        {setoresEmpresa.map(setor => (
+                          <option key={setor} value={setor} className="text-white bg-[#1a1a1a]">{setor}</option>
+                        ))}
+                      </select>
+                      {errors.setor && <p className="text-red-500 text-sm mt-1">{errors.setor}</p>}
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium text-cursor-text-secondary mb-2">
                         Porte da Empresa
                       </label>
-                      <input
-                        type="text"
+                      <select
                         name="porte"
+                        className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
                         value={formData.porte}
                         onChange={handleChange}
-                        className="input-field"
-                        placeholder="Ex: Médio"
                         required
-                      />
-                      {errors.porte && (
-                        <p className="mt-1 text-sm text-cursor-error">{errors.porte}</p>
-                      )}
+                      >
+                        <option value="">Selecione o porte</option>
+                        {portesEmpresa.map(porte => (
+                          <option key={porte} value={porte} className="text-white bg-[#1a1a1a]">{porte}</option>
+                        ))}
+                      </select>
+                      {errors.porte && <p className="text-red-500 text-sm mt-1">{errors.porte}</p>}
                     </div>
                     
                     <div className="col-span-2">
                       <label className="block text-sm font-medium text-cursor-text-secondary mb-2">
                         Áreas de Atuação
                       </label>
-                      <textarea
-                        name="areas_atuacao"
-                        value={formData.areas_atuacao?.join('\n')}
-                        onChange={(e) => handleArrayChange('areas_atuacao', e.target.value)}
-                        rows={4}
-                        className="input-field"
-                        placeholder="Digite uma área por linha&#10;Ex: Desenvolvimento Web&#10;Inteligência Artificial&#10;Cloud Computing"
-                        required
-                      />
-                      <p className="mt-1 text-sm text-cursor-text-tertiary">
-                        Digite uma área por linha ou separe por vírgulas
-                      </p>
-                      {errors.areas_atuacao && (
-                        <p className="mt-1 text-sm text-cursor-error">{errors.areas_atuacao}</p>
-                      )}
+                      <div className="p-3 rounded-lg bg-cursor-bg border border-cursor-border">
+                        <CheckboxGroup
+                          colorScheme="blue"
+                          value={formData.areas_atuacao || []}
+                          onChange={(val) => handleArrayChange('areas_atuacao', val as string[])}
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {areasAtuacao.map((opcao) => (
+                              <Checkbox key={opcao} value={opcao} isChecked={formData.areas_atuacao?.includes(opcao) || false}>
+                                {opcao}
+                              </Checkbox>
+                            ))}
+                          </div>
+                        </CheckboxGroup>
+                      </div>
+                      {errors.areas_atuacao && <p className="text-red-500 text-sm mt-1">{errors.areas_atuacao}</p>}
                     </div>
                   </>
                 )}
@@ -809,7 +992,7 @@ export default function Cadastro() {
                       </label>
                       <select
                         name="tipo"
-                        className="input-field"
+                        className="w-full p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333] focus:border-cursor-primary focus:outline-none"
                         value={formData.tipo}
                         onChange={handleChange}
                         required
@@ -827,26 +1010,30 @@ export default function Cadastro() {
                     
                     <div className="col-span-2">
                       <label className="block text-sm font-medium text-cursor-text-secondary mb-2">
-                        Áreas de Interesse
+                        Áreas de Interesse* (máximo 4)
                       </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 mt-2 p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333]">
-                        {loadingOpcoes ? (
-                          <div className="col-span-2 text-center py-2">
-                            <p className="text-sm text-gray-500">Carregando opções...</p>
+                      <div className="p-3 rounded-lg bg-cursor-bg border border-cursor-border">
+                        <CheckboxGroup
+                          colorScheme="blue"
+                          value={formData.areas_interesse || []}
+                          onChange={(val) => handleArrayChange('areas_interesse', val as string[])}
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {areasInteresse.map((area) => (
+                              <Checkbox 
+                                key={area} 
+                                value={area}
+                                isDisabled={(formData.areas_interesse?.length || 0) >= 4 && !formData.areas_interesse?.includes(area)}
+                              >
+                                {area}
+                              </Checkbox>
+                            ))}
                           </div>
-                        ) : areasInteresse.map((area) => (
-                          <div key={area} className="flex items-center">
-                            <input
-                              type="checkbox"
-                              id={`area-${area}`}
-                              checked={formData.areas_interesse?.includes(area) || false}
-                              onChange={(e) => handleCheckboxChange('areas_interesse', area, e.target.checked)}
-                              className="form-checkbox w-4 h-4 mr-2 bg-transparent border border-[#555] text-[#6366f1] focus:ring-[#6366f1] checked:border-[#6366f1] rounded"
-                            />
-                            <label htmlFor={`area-${area}`} className="text-sm text-white">{area}</label>
-                          </div>
-                        ))}
+                        </CheckboxGroup>
                       </div>
+                      {(formData.areas_interesse?.length || 0) >= 4 && (
+                        <p className="text-yellow-500 text-sm mt-1">Limite máximo de 4 áreas atingido</p>
+                      )}
                       {errors.areas_interesse && <p className="text-red-500 text-sm mt-1">{errors.areas_interesse}</p>}
                     </div>
                     
@@ -854,23 +1041,20 @@ export default function Cadastro() {
                       <label className="block text-sm font-medium text-cursor-text-secondary mb-2">
                         Programas Sociais
                       </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-1 gap-2 mt-2 p-3 rounded-lg bg-[#1a1a1a] text-white border border-[#333]">
-                        {loadingOpcoes ? (
-                          <div className="text-center py-2">
-                            <p className="text-sm text-gray-500">Carregando opções...</p>
+                      <div className="p-3 rounded-lg bg-cursor-bg border border-cursor-border">
+                        <CheckboxGroup
+                          colorScheme="blue"
+                          value={formData.programas_sociais || []}
+                          onChange={(val) => handleArrayChange('programas_sociais', val as string[])}
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {programasSociais.map((programa) => (
+                              <Checkbox key={programa} value={programa}>
+                                {programa}
+                              </Checkbox>
+                            ))}
                           </div>
-                        ) : programasSociais.map((programa) => (
-                          <div key={programa} className="flex items-center">
-                            <input
-                              type="checkbox"
-                              id={`programa-${programa}`}
-                              checked={formData.programas_sociais?.includes(programa) || false}
-                              onChange={(e) => handleCheckboxChange('programas_sociais', programa, e.target.checked)}
-                              className="form-checkbox w-4 h-4 mr-2 bg-transparent border border-[#555] text-[#6366f1] focus:ring-[#6366f1] checked:border-[#6366f1] rounded"
-                            />
-                            <label htmlFor={`programa-${programa}`} className="text-sm text-white">{programa}</label>
-                          </div>
-                        ))}
+                        </CheckboxGroup>
                       </div>
                       {errors.programas_sociais && <p className="text-red-500 text-sm mt-1">{errors.programas_sociais}</p>}
                     </div>

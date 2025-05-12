@@ -1,14 +1,15 @@
 import express from 'express';
 // Removendo a importação do middleware de autenticação
 // import { authMiddleware } from './auth.js';
+import db from '../db-connect.js';
 
 const router = express.Router();
+const pool = db.pool;
 
 // Rota para obter todas as opções disponíveis - removendo authMiddleware
 router.get('/', async (req, res, next) => {
   try {
     console.log('[API-opcoes] Recebida solicitação para buscar todas as opções');
-    const pool = req.db;
     
     // Consulta de todas as opções disponíveis por categoria
     const opcoesQuery = await pool.query(`
@@ -32,35 +33,25 @@ router.get('/', async (req, res, next) => {
 });
 
 // Rota para obter opções de uma categoria específica - removendo authMiddleware
-router.get('/:categoria', async (req, res, next) => {
+router.get('/:categoria', async (req, res) => {
   try {
     const { categoria } = req.params;
-    console.log(`[API-opcoes] Recebida solicitação para buscar opções da categoria: ${categoria}`);
-    const pool = req.db;
     
-    // Consulta de opções por categoria
-    const opcoesQuery = await pool.query(`
-      SELECT valor
-      FROM opcoes_sistema
-      WHERE categoria = $1
-      ORDER BY ordem, valor
-    `, [categoria]);
+    const result = await pool.query(
+      'SELECT id, valor, descricao FROM opcoes_padrao WHERE categoria = $1 AND ativo = true ORDER BY valor',
+      [categoria]
+    );
     
-    // Extrair apenas os valores como um array
-    const valores = opcoesQuery.rows.map(row => row.valor);
-    
-    res.json(valores);
+    res.json(result.rows);
   } catch (error) {
-    console.error('[API-opcoes] Erro ao buscar opções por categoria:', error);
-    next(error);
+    console.error('Erro ao buscar opções:', error);
+    res.status(500).json({ erro: 'Erro ao buscar opções' });
   }
 });
 
 // Endpoint para iniciar/popular a tabela de opções - removendo authMiddleware e verificação de papel
 router.post('/init', async (req, res, next) => {
   try {
-    const pool = req.db;
-    
     // Verificar se a tabela existe, se não existir, criar
     await pool.query(`
       CREATE TABLE IF NOT EXISTS opcoes_sistema (
@@ -200,8 +191,6 @@ router.post('/init', async (req, res, next) => {
 // Mantemos a rota sem autenticação para compatibilidade
 router.post('/init-sem-auth', async (req, res, next) => {
   try {
-    const pool = req.db;
-    
     // Verificar se a tabela existe, se não existir, criar
     await pool.query(`
       CREATE TABLE IF NOT EXISTS opcoes_sistema (
@@ -335,6 +324,20 @@ router.post('/init-sem-auth', async (req, res, next) => {
   } catch (error) {
     console.error('[API-opcoes] Erro ao inicializar opções:', error);
     next(error);
+  }
+});
+
+// Obter todas as categorias disponíveis
+router.get('/categorias', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT DISTINCT categoria FROM opcoes_padrao WHERE ativo = true ORDER BY categoria'
+    );
+    
+    res.json(result.rows.map(row => row.categoria));
+  } catch (error) {
+    console.error('Erro ao buscar categorias:', error);
+    res.status(500).json({ erro: 'Erro ao buscar categorias' });
   }
 });
 

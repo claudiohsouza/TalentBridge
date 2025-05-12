@@ -39,15 +39,13 @@ export const authMiddleware = (req, res, next) => {
 // Middleware para verificar o papel do usuário
 export const checkRole = (roles) => {
   return (req, res, next) => {
-    // Removida verificação de papel - permitir qualquer usuário autenticado
     if (!req.user) {
       return next(new AuthenticationError('Usuário não autenticado'));
     }
     
-    // Remover verificação de papel
-    // if (!roles.includes(req.user.papel)) {
-    //   return next(new AuthenticationError('Acesso não autorizado para este papel'));
-    // }
+    if (!roles.includes(req.user.papel)) {
+      return next(new AuthenticationError('Acesso não autorizado para este papel'));
+    }
     
     next();
   };

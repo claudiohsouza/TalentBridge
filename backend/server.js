@@ -16,6 +16,7 @@ import usuariosRoutes from './routes/usuarios.js';
 import jovensRoutes from './routes/jovens.js';
 import oportunidadesRoutes from './routes/oportunidades.js';
 import opcoesRoutes from './routes/opcoes.js';
+import avaliacoesRoutes from './routes/avaliacoes.js';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -136,6 +137,7 @@ app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/jovens', jovensRoutes);
 app.use('/api/oportunidades', oportunidadesRoutes);
 app.use('/api/opcoes', opcoesRoutes);
+app.use('/api/avaliacoes', avaliacoesRoutes);
 
 // Rota padrão
 app.get('/', (req, res) => {
@@ -150,7 +152,10 @@ app.get('/', (req, res) => {
 app.options('*', cors(corsOptions));
 
 // Middleware de tratamento para 404
-app.use(notFoundHandler);
+app.use((req, res, next) => {
+  console.log('Rota não encontrada:', req.originalUrl);
+  next();
+}, notFoundHandler);
 
 // Middleware de tratamento de erros
 app.use(errorHandler);

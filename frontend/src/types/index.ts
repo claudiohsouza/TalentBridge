@@ -3,7 +3,7 @@
  */
 
 // Tipos de usuário
-export type UserRole = 'jovem' | 'instituicao_ensino' | 'chefe_empresa' | 'instituicao_contratante';
+export type UserRole = 'instituicao_ensino' | 'chefe_empresa' | 'instituicao_contratante';
 
 export interface User {
   id: string;
@@ -50,23 +50,29 @@ export interface RegisterRequest {
 
 // Jovem
 export interface Jovem {
-  id: string;
+  id: number;
   nome: string;
   email: string;
   idade: number;
-  formacao?: string;
+  formacao: string;
+  curso?: string;
+  habilidades: string[];
+  interesses: string[];
+  planos_futuros: string;
   status: 'Ativo' | 'Inativo' | 'Pendente';
-  habilidades?: string[];
-  interesses?: string[];
-  planos_futuros?: string;
   empresas?: {
-    id: string;
+    id: number;
     nome: string;
     cargo: string;
     status: 'Contratado' | 'Estagiário' | 'Desligado';
   }[];
   criado_em: string;
   atualizado_em: string;
+  avaliacoes?: Avaliacao[];
+  historico?: HistoricoDesenvolvimento[];
+  badges?: JovemBadge[];
+  media_geral?: number;
+  total_avaliacoes?: number;
 }
 
 export interface JovemInput {
@@ -162,4 +168,77 @@ export interface AppState {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
+}
+
+// Avaliações
+export interface CategoriaAvaliacao {
+  id: number;
+  nome: string;
+  descricao: string;
+  peso: number;
+}
+
+export interface Avaliacao {
+  id: number;
+  jovem_id: number;
+  avaliador_tipo: 'instituicao_ensino' | 'chefe_empresa';
+  avaliador_id: number;
+  categoria_id: number;
+  nota: number;
+  comentario?: string;
+  evidencias?: string[];
+  criado_em: string;
+  atualizado_em: string;
+  categoria?: CategoriaAvaliacao;
+}
+
+export interface AvaliacaoInput {
+  categoria_id: number;
+  nota: number;
+  comentario?: string;
+  evidencias?: string[];
+}
+
+// Histórico de desenvolvimento
+export interface HistoricoDesenvolvimento {
+  id: number;
+  jovem_id: number;
+  tipo: 'certificacao' | 'curso' | 'projeto' | 'conquista';
+  titulo: string;
+  descricao?: string;
+  data_inicio?: string;
+  data_conclusao?: string;
+  instituicao?: string;
+  comprovante_url?: string;
+  validado: boolean;
+  validado_por?: number;
+  criado_em: string;
+}
+
+export interface HistoricoDesenvolvimentoInput {
+  tipo: 'certificacao' | 'curso' | 'projeto' | 'conquista';
+  titulo: string;
+  descricao?: string;
+  data_inicio?: string;
+  data_conclusao?: string;
+  instituicao?: string;
+  comprovante_url?: string;
+}
+
+// Badges
+export interface Badge {
+  id: number;
+  nome: string;
+  descricao?: string;
+  icone_url?: string;
+  criterios?: Record<string, any>;
+  criado_em: string;
+}
+
+export interface JovemBadge {
+  jovem_id: number;
+  badge_id: number;
+  data_conquista: string;
+  concedido_por?: number;
+  badge?: Badge;
 } 

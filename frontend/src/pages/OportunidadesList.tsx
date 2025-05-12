@@ -3,6 +3,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Oportunidade } from '../types';
 
+// Função utilitária para corrigir problemas de codificação
+const corrigirTexto = (texto: string): string => {
+  if (!texto) return '';
+  
+  return texto
+    .replace(/Ã§/g, 'ç')
+    .replace(/Ã£/g, 'ã')
+    .replace(/Ã¡/g, 'á')
+    .replace(/Ã©/g, 'é')
+    .replace(/Ã­/g, 'í')
+    .replace(/Ã³/g, 'ó')
+    .replace(/Ãº/g, 'ú')
+    .replace(/Ã\u0082/g, 'Â')
+    .replace(/Ã³/g, 'ó')
+    .replace(/Ã§Ã£/g, 'ção');
+};
+
 const OportunidadesList: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -10,6 +27,14 @@ const OportunidadesList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Mapear o papel para a URL correta
+  const papelParaUrl = {
+    'instituicao_ensino': 'instituicao-ensino',
+    'chefe_empresa': 'chefe-empresa',
+    'instituicao_contratante': 'instituicao-contratante'
+  };
+  const urlBase = user?.papel ? `/${papelParaUrl[user.papel]}/oportunidades` : '';
 
   useEffect(() => {
     const fetchOportunidades = async () => {
@@ -72,7 +97,7 @@ const OportunidadesList: React.FC = () => {
             </div>
 
             <button
-              onClick={() => navigate('/instituicao-contratante/oportunidades/nova')}
+              onClick={() => navigate(`${urlBase}/nova`)}
               className="btn-primary inline-flex items-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,7 +163,7 @@ const OportunidadesList: React.FC = () => {
                     Comece criando sua primeira oportunidade
                   </p>
                   <button 
-                    onClick={() => navigate('/instituicao-contratante/oportunidades/nova')}
+                    onClick={() => navigate(`${urlBase}/nova`)}
                     className="btn-primary"
                   >
                     Nova Oportunidade
@@ -175,13 +200,13 @@ const OportunidadesList: React.FC = () => {
                   {filteredOportunidades.map(oportunidade => (
                     <tr key={oportunidade.id} className="hover:bg-cursor-background-light transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-cursor-text-primary">
-                        {oportunidade.titulo}
+                        {corrigirTexto(oportunidade.titulo)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-cursor-text-secondary">
-                        {oportunidade.tipo}
+                        {corrigirTexto(oportunidade.tipo)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-cursor-text-secondary">
-                        {oportunidade.area}
+                        {corrigirTexto(oportunidade.area)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className={`badge ${
@@ -189,7 +214,7 @@ const OportunidadesList: React.FC = () => {
                           oportunidade.status === 'Fechada' ? 'badge-warning' : 
                           'badge-default'
                         }`}>
-                          {oportunidade.status}
+                          {corrigirTexto(oportunidade.status)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-cursor-text-secondary">
@@ -197,7 +222,7 @@ const OportunidadesList: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <Link 
-                          to={`/instituicao-contratante/oportunidades/${oportunidade.id}`}
+                          to={`${urlBase}/${oportunidade.id}`}
                           className="text-cursor-primary hover:text-cursor-primary-dark transition-colors"
                         >
                           Ver detalhes

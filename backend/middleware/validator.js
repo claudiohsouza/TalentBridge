@@ -193,28 +193,99 @@ export const atualizacaoUsuarioSchema = Joi.object({
 });
 
 // Validação de Jovem
-export const jovemSchema = Joi.object({
-  nome: Joi.string().required().messages({
-    'string.empty': errorMessages.string.empty,
-    'any.required': errorMessages.any.required
-  }),
-  email: Joi.string().email().required().messages({
-    'string.email': errorMessages.string.email,
-    'string.empty': errorMessages.string.empty,
-    'any.required': errorMessages.any.required
-  }),
-  idade: Joi.number().integer().min(14).max(29).required().messages({
-    'number.base': 'Idade deve ser um número',
-    'number.integer': errorMessages.number.integer,
-    'number.min': errorMessages.number.min,
-    'number.max': errorMessages.number.max,
-    'any.required': errorMessages.any.required
-  }),
-  formacao: Joi.string().allow(null, '').optional(),
-  habilidades: Joi.array().items(Joi.string()).allow(null).optional(),
-  interesses: Joi.array().items(Joi.string()).allow(null).optional(),
-  planos_futuros: Joi.string().allow('', null).optional()
-});
+export const jovemSchema = {
+  nome: {
+    notEmpty: {
+      errorMessage: 'Nome é obrigatório'
+    }
+  },
+  email: {
+    notEmpty: {
+      errorMessage: 'Email é obrigatório'
+    },
+    isEmail: {
+      errorMessage: 'Email inválido'
+    }
+  },
+  senha: {
+    optional: true,
+    isLength: {
+      options: { min: 6 },
+      errorMessage: 'Senha deve ter no mínimo 6 caracteres'
+    }
+  },
+  idade: {
+    notEmpty: {
+      errorMessage: 'Idade é obrigatória'
+    },
+    isInt: {
+      options: { min: 14, max: 29 },
+      errorMessage: 'Idade deve estar entre 14 e 29 anos'
+    }
+  },
+  formacao: {
+    notEmpty: {
+      errorMessage: 'Formação é obrigatória'
+    },
+    isIn: {
+      options: [['ensino_medio', 'tecnico', 'superior', 'pos_graduacao']],
+      errorMessage: 'Formação inválida'
+    }
+  },
+  curso: {
+    notEmpty: {
+      errorMessage: 'Curso é obrigatório'
+    },
+    custom: {
+      options: (value, { req }) => {
+        if (req.body.formacao === 'ensino_medio' && value) {
+          throw new Error('Curso não deve ser informado para ensino médio');
+        }
+        if (req.body.formacao !== 'ensino_medio' && !value) {
+          throw new Error('Curso é obrigatório para esta formação');
+        }
+        return true;
+      }
+    }
+  },
+  habilidades: {
+    notEmpty: {
+      errorMessage: 'Habilidades são obrigatórias'
+    },
+    isArray: {
+      errorMessage: 'Habilidades deve ser um array'
+    },
+    custom: {
+      options: (value) => {
+        if (!Array.isArray(value) || value.length === 0) {
+          throw new Error('Pelo menos uma habilidade deve ser informada');
+        }
+        return true;
+      }
+    }
+  },
+  interesses: {
+    notEmpty: {
+      errorMessage: 'Interesses são obrigatórios'
+    },
+    isArray: {
+      errorMessage: 'Interesses deve ser um array'
+    },
+    custom: {
+      options: (value) => {
+        if (!Array.isArray(value) || value.length === 0) {
+          throw new Error('Pelo menos um interesse deve ser informado');
+        }
+        return true;
+      }
+    }
+  },
+  planos_futuros: {
+    notEmpty: {
+      errorMessage: 'Planos futuros são obrigatórios'
+    }
+  }
+};
 
 // Validação de Oportunidade
 export const oportunidadeSchema = Joi.object({

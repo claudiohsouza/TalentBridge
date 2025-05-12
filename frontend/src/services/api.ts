@@ -12,13 +12,15 @@ import {
 } from '../types';
 
 // Configuração do axios
-// Deixamos o baseURL vazio para aproveitar o proxy configurado no package.json
 const api = axios.create({
+  baseURL: process.env.NODE_ENV === 'production' 
+    ? process.env.REACT_APP_API_URL 
+    : '',  // Em desenvolvimento, usa o proxy do package.json
   headers: {
     'Content-Type': 'application/json; charset=utf-8',
     'Accept': 'application/json; charset=utf-8'
   },
-  withCredentials: true, // Importante para cookies e autenticação cross-origin
+  withCredentials: true,
   timeout: 10000
 });
 
@@ -73,12 +75,12 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Erro na requisição:', error);
+    console.error('[API] Erro na requisição:', error);
     return Promise.reject(error);
   }
 );
 
-// Interceptor para tratar erros de autenticação
+// Interceptor para tratar erros de autenticação e respostas
 api.interceptors.response.use(
   (response) => {
     console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url} - Status: ${response.status}`);
@@ -91,11 +93,11 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('Erro de resposta API:', error);
+    console.error('[API] Erro de resposta:', error.response?.status, error.response?.data);
     
     // Tratar erros de autenticação (401)
     if (error.response?.status === 401) {
-      console.log('Token expirado ou inválido, redirecionando para login');
+      console.log('[API] Token expirado ou inválido, redirecionando para login');
       localStorage.removeItem('token');
       localStorage.removeItem('papel');
       localStorage.removeItem('email');
@@ -105,6 +107,18 @@ api.interceptors.response.use(
       if (path !== '/login' && path !== '/cadastro' && path !== '/') {
         window.location.href = '/login';
       }
+    }
+    
+    // Tratar erros 404
+    if (error.response?.status === 404) {
+      console.log('[API] Recurso não encontrado');
+      error.message = error.response.data.message || 'Recurso não encontrado';
+    }
+    
+    // Tratar erros 500
+    if (error.response?.status >= 500) {
+      console.error('[API] Erro interno do servidor');
+      error.message = 'Erro interno do servidor. Por favor, tente novamente.';
     }
     
     return Promise.reject(error);
@@ -174,6 +188,18 @@ export const usuarioService = {
       console.error('[User Service] Erro ao atualizar perfil:', error);
       throw error;
     }
+  },
+
+  alterarSenha: async (data: { senhaAtual: string, novaSenha: string }): Promise<ApiResponse<void>> => {
+    try {
+      console.log('[User Service] Alterando senha');
+      const response = await api.put<ApiResponse<void>>('/api/usuario/alterar-senha', data);
+      console.log('[User Service] Senha alterada com sucesso');
+      return response.data;
+    } catch (error) {
+      console.error('[User Service] Erro ao alterar senha:', error);
+      throw error;
+    }
   }
 };
 
@@ -181,60 +207,68 @@ export const usuarioService = {
 export const jovemService = {
   listarJovens: async (): Promise<Jovem[]> => {
     try {
-      console.log('[Jovem Service] Listando jovens');
       const response = await api.get<Jovem[]>('/api/jovens');
-      console.log('[Jovem Service] Jovens encontrados:', response.data.length);
       return response.data;
     } catch (error) {
-      console.error('[Jovem Service] Erro ao listar jovens:', error);
+      console.error('Erro ao listar jovens:', error);
       throw error;
     }
   },
 
   getJovem: async (id: number): Promise<Jovem> => {
     try {
-      console.log(`[Jovem Service] Buscando jovem ID ${id}`);
       const response = await api.get<Jovem>(`/api/jovens/${id}`);
-      console.log('[Jovem Service] Jovem encontrado:', response.data);
       return response.data;
     } catch (error) {
-      console.error(`[Jovem Service] Erro ao buscar jovem ID ${id}:`, error);
-      throw error;
-    }
-  },
-  
-  adicionarJovem: async (jovem: JovemInput): Promise<Jovem> => {
-    try {
-      console.log('[Jovem Service] Adicionando jovem:', jovem.nome);
-      const response = await api.post<Jovem>('/api/jovens', jovem);
-      console.log('[Jovem Service] Jovem adicionado:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('[Jovem Service] Erro ao adicionar jovem:', error);
+      console.error('Erro ao buscar jovem:', error);
       throw error;
     }
   },
 
-  atualizarJovem: async (id: number, jovem: JovemInput): Promise<Jovem> => {
+  adicionarJovem: async (data: JovemInput): Promise<Jovem> => {
     try {
-      console.log(`[Jovem Service] Atualizando jovem ID ${id}:`, jovem.nome);
-      const response = await api.put<Jovem>(`/api/jovens/${id}`, jovem);
-      console.log('[Jovem Service] Jovem atualizado:', response.data);
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.papel !== 'instituicao_ensino') {
+        throw new Error('Apenas instituições de ensino podem adicionar jovens');
+      }
+
+      console.log('Adicionando jovem:', data);
+      const response = await api.post<Jovem>('/api/jovens', data);
+      console.log('Jovem adicionado com sucesso:', response.data);
       return response.data;
     } catch (error) {
-      console.error(`[Jovem Service] Erro ao atualizar jovem ID ${id}:`, error);
+      console.error('Erro ao adicionar jovem:', error);
       throw error;
     }
   },
 
-  excluirJovem: async (id: number): Promise<ApiResponse<null>> => {
+  atualizarJovem: async (id: number, data: JovemInput): Promise<Jovem> => {
     try {
-      console.log(`[Jovem Service] Excluindo jovem ID ${id}`);
-      const response = await api.delete<ApiResponse<null>>(`/api/jovens/${id}`);
-      console.log('[Jovem Service] Jovem excluído');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.papel !== 'instituicao_ensino') {
+        throw new Error('Apenas instituições de ensino podem atualizar jovens');
+      }
+
+      console.log('Atualizando jovem:', id, data);
+      const response = await api.put<Jovem>(`/api/jovens/${id}`, data);
+      console.log('Jovem atualizado com sucesso:', response.data);
       return response.data;
     } catch (error) {
-      console.error(`[Jovem Service] Erro ao excluir jovem ID ${id}:`, error);
+      console.error('Erro ao atualizar jovem:', error);
+      throw error;
+    }
+  },
+
+  excluirJovem: async (id: number): Promise<void> => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.papel !== 'instituicao_ensino') {
+        throw new Error('Apenas instituições de ensino podem excluir jovens');
+      }
+
+      await api.delete(`/api/jovens/${id}`);
+    } catch (error) {
+      console.error('Erro ao excluir jovem:', error);
       throw error;
     }
   }

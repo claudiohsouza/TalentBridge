@@ -21,7 +21,7 @@ router.get('/', authMiddleware, async (req, res, next) => {
       SELECT o.*, 
              ic.tipo as instituicao_tipo,
              u.nome as instituicao_nome,
-             ic.areas_interesse->>0 as area,
+             COALESCE(ic.areas_interesse->0, 'Não especificada') as area,
              (SELECT COUNT(*) FROM recomendacoes r WHERE r.oportunidade_id = o.id) as total_recomendacoes
       FROM oportunidades o
       JOIN instituicoes_contratantes ic ON o.instituicao_id = ic.id

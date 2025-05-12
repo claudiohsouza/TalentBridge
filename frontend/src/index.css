@@ -62,6 +62,16 @@
   .badge-default {
     @apply bg-cursor-text-tertiary/10 text-cursor-text-tertiary;
   }
+
+  select.input-field {
+    @apply bg-cursor-background-light text-cursor-text-primary border border-cursor-border rounded-lg p-3 w-full focus:border-cursor-primary focus:ring-1 focus:ring-cursor-primary focus:outline-none transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+  }
+  select.input-field option {
+    @apply bg-cursor-background-light text-cursor-text-primary;
+  }
 }
 
 /* Scrollbar personalizada */

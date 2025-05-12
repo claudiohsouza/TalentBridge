@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { jovemService } from '../services/api';
-import { JovemInput } from '../types';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface FormData {
   nome: string;
   email: string;
   idade: string;
   formacao: string;
-  curso: string;
+  curso?: string;
   habilidades: string[];
   interesses: string[];
   planos_futuros: string;
 }
 
-const NovoJovem: React.FC = () => {
+const EditarJovem: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
   // Redirecionar se não for instituição de ensino
   useEffect(() => {
@@ -26,6 +26,8 @@ const NovoJovem: React.FC = () => {
     }
   }, [user, navigate]);
 
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<{mensagem: string, tipo: 'success' | 'error'} | null>(null);
   const [formData, setFormData] = useState<FormData>({
     nome: '',
     email: '',
@@ -38,8 +40,34 @@ const NovoJovem: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState<{mensagem: string, tipo: 'success' | 'error'} | null>(null);
+
+  useEffect(() => {
+    const carregarJovem = async () => {
+      if (!id) return;
+      
+      try {
+        const response = await jovemService.getJovem(parseInt(id));
+        setFormData({
+          nome: response.nome,
+          email: response.email,
+          idade: response.idade.toString(),
+          formacao: response.formacao || '',
+          curso: response.curso || '',
+          habilidades: response.habilidades || [],
+          interesses: response.interesses || [],
+          planos_futuros: response.planos_futuros || ''
+        });
+      } catch (error) {
+        console.error('Erro ao carregar jovem:', error);
+        setFeedback({
+          mensagem: 'Erro ao carregar dados do jovem',
+          tipo: 'error'
+        });
+      }
+    };
+
+    carregarJovem();
+  }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -116,13 +144,13 @@ const NovoJovem: React.FC = () => {
     setFeedback(null);
     
     try {
-      await jovemService.adicionarJovem({
+      await jovemService.atualizarJovem(parseInt(id!), {
         ...formData,
         idade: parseInt(formData.idade)
       });
       
       setFeedback({
-        mensagem: 'Jovem adicionado com sucesso!',
+        mensagem: 'Jovem atualizado com sucesso!',
         tipo: 'success'
       });
       
@@ -131,10 +159,10 @@ const NovoJovem: React.FC = () => {
         navigate('/instituicao-ensino/jovens');
       }, 2000);
     } catch (error: any) {
-      console.error('Erro ao adicionar jovem:', error);
+      console.error('Erro ao atualizar jovem:', error);
       
       setFeedback({
-        mensagem: error.response?.data?.message || error.message || 'Erro ao adicionar jovem',
+        mensagem: error.response?.data?.message || error.message || 'Erro ao atualizar jovem',
         tipo: 'error'
       });
     } finally {
@@ -152,8 +180,8 @@ const NovoJovem: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-cursor-text-primary">Novo Jovem</h1>
-            <p className="text-cursor-text-secondary mt-1">Adicione um novo jovem ao sistema</p>
+            <h1 className="text-2xl font-bold text-cursor-text-primary">Editar Jovem</h1>
+            <p className="text-cursor-text-secondary mt-1">Atualize as informações do jovem</p>
           </div>
           <button 
             onClick={() => navigate('/instituicao-ensino/jovens')}
@@ -385,7 +413,7 @@ const NovoJovem: React.FC = () => {
                     <div className="loading-spinner mr-2"></div>
                     Salvando...
                   </div>
-                ) : 'Salvar jovem'}
+                ) : 'Salvar alterações'}
               </button>
             </div>
           </form>
@@ -395,4 +423,4 @@ const NovoJovem: React.FC = () => {
   );
 };
 
-export default NovoJovem; 
+export default EditarJovem; 

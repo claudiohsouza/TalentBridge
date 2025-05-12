@@ -116,17 +116,27 @@ const executarQuery = async (text, params, retries = 3) => {
   while (attempt < retries) {
     try {
       client = await pool.connect();
-      dbLogger.debug(`Executando query: ${text.substring(0, 100)}...`);
+      dbLogger.debug('Executando query:', {
+        query: text.substring(0, 100) + '...',
+        params: params,
+        attempt: attempt + 1,
+        retries: retries
+      });
       
       const result = await client.query(text, params);
-      dbLogger.debug(`Query executada com sucesso. Retornando ${result.rowCount} linhas.`);
+      dbLogger.debug('Query executada com sucesso:', {
+        rowCount: result.rowCount,
+        firstRow: result.rows.length > 0 ? JSON.stringify(result.rows[0]).substring(0, 100) + '...' : null
+      });
       return result;
     } catch (err) {
-      dbLogger.error(`Erro na execução da query (tentativa ${attempt + 1}/${retries}):`, {
+      dbLogger.error('Erro na execução da query:', {
         error: err.message,
         code: err.code,
         query: text.substring(0, 100) + '...',
-        params: JSON.stringify(params)
+        params: JSON.stringify(params),
+        attempt: attempt + 1,
+        retries: retries
       });
       
       attempt++;

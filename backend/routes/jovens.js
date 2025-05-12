@@ -2,64 +2,62 @@ import express from 'express';
 import { validate, jovemSchema, recomendacaoSchema } from '../middleware/validator.js';
 import { authMiddleware, checkRole } from '../routes/auth.js';
 import { ForbiddenError, NotFoundError, DatabaseError } from '../middleware/errorHandler.js';
+import db from '../db-connect.js';
 
 const router = express.Router();
 
-// Listar jovens
-router.get('/', authMiddleware, async (req, res, next) => {
+// Listar jovens - todos os tipos de usuário podem visualizar
+router.get('/', authMiddleware, checkRole(['instituicao_ensino', 'chefe_empresa', 'instituicao_contratante']), async (req, res) => {
   try {
-    console.log('[API-jovens] Recebida solicitação para listar jovens');
-    console.log('[API-jovens] Usuário:', req.user.id, req.user.email, req.user.papel);
-    
-    const pool = req.db;
-    if (!pool) {
-      console.error('[API-jovens] Pool de conexão não disponível');
-      return next(new Error('Erro de conexão com o banco de dados'));
-    }
-    
-    // Removendo filtros baseados em papel - permitir visualização a todos os usuários
-    const query = `
-      SELECT j.*, 
-             je.chefe_empresa_id, 
-             ji.instituicao_id
+    const result = await db.executarQuery(`
+      SELECT 
+        j.id,
+        j.nome,
+        j.email,
+        j.idade,
+        j.formacao,
+        j.curso,
+        j.habilidades,
+        j.interesses,
+        j.planos_futuros,
+        j.status,
+        j.criado_em,
+        j.atualizado_em
       FROM jovens j
-      LEFT JOIN jovens_empresas je ON j.id = je.jovem_id AND je.status = 'Ativo'
-      LEFT JOIN jovens_instituicoes ji ON j.id = ji.jovem_id AND ji.status = 'Ativo'
-      WHERE j.status = 'Ativo'
-      ORDER BY j.nome ASC
-    `;
-    
-    const result = await pool.query(query);
-    const jovens = result.rows;
-    
-    console.log(`[API-jovens] Encontrados ${jovens.length} jovens`);
-    
-    // Processar dados dos jovens
-    const processedJovens = jovens.map(jovem => {
-      // Processar arrays armazenados como strings
-      if (jovem.habilidades && typeof jovem.habilidades === 'string') {
-        try {
-          jovem.habilidades = JSON.parse(jovem.habilidades);
-        } catch (e) {
-          jovem.habilidades = [];
-        }
+      ORDER BY j.nome
+    `);
+
+    const jovens = result.rows.map(jovem => {
+      let parsedHabilidades = [];
+      let parsedInteresses = [];
+      
+      try {
+        parsedHabilidades = jovem.habilidades ? JSON.parse(jovem.habilidades) : [];
+      } catch (e) {
+        console.log(`Erro ao parsear habilidades para jovem ${jovem.id}:`, e.message);
+        // Se não for JSON válido, tenta tratar como string simples
+        parsedHabilidades = jovem.habilidades ? [jovem.habilidades] : [];
       }
       
-      if (jovem.interesses && typeof jovem.interesses === 'string') {
-        try {
-          jovem.interesses = JSON.parse(jovem.interesses);
-        } catch (e) {
-          jovem.interesses = [];
-        }
+      try {
+        parsedInteresses = jovem.interesses ? JSON.parse(jovem.interesses) : [];
+      } catch (e) {
+        console.log(`Erro ao parsear interesses para jovem ${jovem.id}:`, e.message);
+        // Se não for JSON válido, tenta tratar como string simples
+        parsedInteresses = jovem.interesses ? [jovem.interesses] : [];
       }
       
-      return jovem;
+      return {
+        ...jovem,
+        habilidades: parsedHabilidades,
+        interesses: parsedInteresses
+      };
     });
-    
-    res.json(processedJovens);
+
+    res.json(jovens);
   } catch (error) {
-    console.error('[API-jovens] Erro ao listar jovens:', error);
-    next(error);
+    console.error('Erro ao listar jovens:', error);
+    res.status(500).json({ message: 'Erro ao listar jovens' });
   }
 });
 
@@ -72,247 +70,112 @@ router.get('/novo', authMiddleware, (req, res) => {
   });
 });
 
-// Obter um jovem específico
-router.get('/:id', authMiddleware, async (req, res, next) => {
+// Obter um jovem específico - todos os tipos de usuário podem visualizar
+router.get('/:id', authMiddleware, checkRole(['instituicao_ensino', 'chefe_empresa', 'instituicao_contratante']), async (req, res) => {
   try {
-    console.log('[API-jovens] Recebida solicitação para obter detalhes do jovem:', req.params.id);
-    console.log('[API-jovens] Usuário:', req.user.id, req.user.email, req.user.papel);
+    console.log('Buscando jovem com ID:', req.params.id);
     
-    const pool = req.db;
-    if (!pool) {
-      console.error('[API-jovens] Pool de conexão não disponível');
-      return next(new Error('Erro de conexão com o banco de dados'));
+    const result = await db.executarQuery(`
+      SELECT 
+        j.id,
+        j.nome,
+        j.email,
+        j.idade,
+        j.formacao,
+        j.curso,
+        j.habilidades,
+        j.interesses,
+        j.planos_futuros,
+        j.status,
+        j.criado_em,
+        j.atualizado_em
+      FROM jovens j
+      WHERE j.id = $1
+    `, [req.params.id]);
+
+    console.log('Resultado da busca:', result.rows.length > 0 ? 'Jovem encontrado' : 'Jovem não encontrado');
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Jovem não encontrado' });
+    }
+
+    let parsedHabilidades = [];
+    let parsedInteresses = [];
+    
+    try {
+      parsedHabilidades = result.rows[0].habilidades ? JSON.parse(result.rows[0].habilidades) : [];
+    } catch (e) {
+      console.log(`Erro ao parsear habilidades para jovem ${result.rows[0].id}:`, e.message);
+      // Se não for JSON válido, tenta tratar como string simples
+      parsedHabilidades = result.rows[0].habilidades ? [result.rows[0].habilidades] : [];
     }
     
-    const { id } = req.params;
-    
-    // Validar se o ID é um número inteiro
-    const jovemId = parseInt(id);
-    if (isNaN(jovemId)) {
-      console.error('[API-jovens] ID inválido fornecido:', id);
-      return res.status(400).json({ 
-        message: 'ID inválido. O ID do jovem deve ser um número inteiro.',
-        error: 'INVALID_ID'
-      });
+    try {
+      parsedInteresses = result.rows[0].interesses ? JSON.parse(result.rows[0].interesses) : [];
+    } catch (e) {
+      console.log(`Erro ao parsear interesses para jovem ${result.rows[0].id}:`, e.message);
+      // Se não for JSON válido, tenta tratar como string simples
+      parsedInteresses = result.rows[0].interesses ? [result.rows[0].interesses] : [];
     }
-    
-    // Verificar se o jovem existe
-    console.log('[API-jovens] Buscando dados do jovem');
-    const jovemQuery = await pool.query(
-      'SELECT * FROM jovens WHERE id = $1',
-      [jovemId]
-    );
-    
-    if (jovemQuery.rows.length === 0) {
-      console.log('[API-jovens] Jovem não encontrado:', jovemId);
-      return next(new NotFoundError('Jovem não encontrado'));
-    }
-    
-    const jovem = jovemQuery.rows[0];
-    console.log('[API-jovens] Jovem encontrado:', jovem.nome);
-    
-    // Obter relacionamentos com instituições
-    console.log('[API-jovens] Buscando relacionamentos com instituições');
-    const instituicoesQuery = await pool.query(
-      `SELECT ji.*, ie.tipo, ie.localizacao
-       FROM jovens_instituicoes ji
-       JOIN instituicoes_ensino ie ON ji.instituicao_id = ie.id
-       WHERE ji.jovem_id = $1`,
-      [jovemId]
-    );
-    
-    // Obter relacionamentos com empresas
-    console.log('[API-jovens] Buscando relacionamentos com empresas');
-    const empresasQuery = await pool.query(
-      `SELECT je.*, ce.empresa, ce.setor
-       FROM jovens_empresas je
-       JOIN chefes_empresas ce ON je.chefe_empresa_id = ce.id
-       WHERE je.jovem_id = $1`,
-      [jovemId]
-    );
-    
-    // Verificar permissão de acesso baseado no papel
-    let temPermissao = true; // Allow access for all authenticated users
-    
-    // We'll keep the logging but skip the actual permission checks
-    if (req.user.papel === 'instituicao_contratante') {
-      console.log('[API-jovens] Acesso permitido para instituição contratante');
-    }
-    else if (req.user.papel === 'instituicao_ensino') {
-      console.log('[API-jovens] Acesso permitido para instituição de ensino');
-    }
-    else if (req.user.papel === 'chefe_empresa') {
-      console.log('[API-jovens] Acesso permitido para chefe de empresa');
-    }
-    
-    // Processar dados para resposta
-    const resposta = {
-      ...jovem,
-      instituicoes: instituicoesQuery.rows,
-      empresas: empresasQuery.rows
+
+    const jovem = {
+      ...result.rows[0],
+      habilidades: parsedHabilidades,
+      interesses: parsedInteresses
     };
-    
-    // Converter campos JSON
-    if (resposta.habilidades && typeof resposta.habilidades === 'string') {
-      try {
-        resposta.habilidades = JSON.parse(resposta.habilidades);
-      } catch (e) {
-        resposta.habilidades = [];
-      }
-    }
-    
-    if (resposta.interesses && typeof resposta.interesses === 'string') {
-      try {
-        resposta.interesses = JSON.parse(resposta.interesses);
-      } catch (e) {
-        resposta.interesses = [];
-      }
-    }
-    
-    console.log('[API-jovens] Enviando resposta com sucesso');
-    res.json(resposta);
+
+    console.log('Retornando dados do jovem:', { id: jovem.id, nome: jovem.nome });
+    res.json(jovem);
   } catch (error) {
-    console.error('[API-jovens] Erro ao obter detalhes do jovem:', error);
-    next(error);
+    console.error('Erro ao buscar jovem:', error);
+    res.status(500).json({ message: 'Erro ao buscar jovem' });
   }
 });
 
-// Criar novo jovem
-router.post('/', authMiddleware, checkRole(['instituicao_ensino', 'chefe_empresa']), validate(jovemSchema), async (req, res, next) => {
+// Criar novo jovem - apenas instituições de ensino podem criar
+router.post('/', authMiddleware, checkRole(['instituicao_ensino']), validate(jovemSchema), async (req, res) => {
   try {
-    console.log('[API-jovens] Recebida solicitação para criar novo jovem');
-    console.log('[API-jovens] Usuário:', req.user.id, req.user.email, req.user.papel);
-    
-    const pool = req.db;
-    if (!pool) {
-      console.error('[API-jovens] Pool de conexão não disponível');
-      return next(new Error('Erro de conexão com o banco de dados'));
-    }
-    
-    const { nome, email, idade, formacao, curso, habilidades, interesses, planos_futuros } = req.body;
-    
     // Verificar se o email já está em uso
-    const emailExistente = await pool.query('SELECT id FROM jovens WHERE email = $1', [email]);
-    if (emailExistente.rows.length > 0) {
-      return res.status(400).json({
-        message: 'Email já está em uso por outro jovem',
-        error: 'EMAIL_IN_USE'
-      });
+    const emailCheck = await db.executarQuery(
+      'SELECT id FROM jovens WHERE email = $1',
+      [req.body.email]
+    );
+
+    if (emailCheck.rows.length > 0) {
+      return res.status(400).json({ message: 'Email já está em uso' });
     }
-    
-    // Determinar o tipo do usuário e obter a ID da instituição/empresa
-    let entidadeId;
-    let entidadeTipo = req.user.papel;
-    
-    if (entidadeTipo === 'instituicao_ensino') {
-      const result = await pool.query(
-        'SELECT id FROM instituicoes_ensino WHERE usuario_id = $1',
-        [req.user.id]
-      );
-      
-      if (result.rows.length === 0) {
-        return res.status(400).json({ message: 'Perfil de instituição não encontrado' });
-      }
-      
-      entidadeId = result.rows[0].id;
-    } 
-    else if (entidadeTipo === 'chefe_empresa') {
-      const result = await pool.query(
-        'SELECT id FROM chefes_empresas WHERE usuario_id = $1',
-        [req.user.id]
-      );
-      
-      if (result.rows.length === 0) {
-        return res.status(400).json({ message: 'Perfil de empresa não encontrado' });
-      }
-      
-      entidadeId = result.rows[0].id;
-    }
-    else {
-      return next(new ForbiddenError('Não autorizado a adicionar jovens'));
-    }
-    
-    // Preparar dados para inserir
-    const habilidadesJSON = habilidades ? JSON.stringify(habilidades) : null;
-    const interessesJSON = interesses ? JSON.stringify(interesses) : null;
-    
-    // Inicia uma transação
-    const client = await pool.connect();
-    
-    try {
-      await client.query('BEGIN');
-      
-      // Inserir o jovem
-      const jovemResult = await client.query(
-        `INSERT INTO jovens 
-        (nome, email, idade, formacao, curso, habilidades, interesses, planos_futuros, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *`,
-        [nome, email, idade, formacao, curso, habilidadesJSON, interessesJSON, planos_futuros, 'Ativo']
-      );
-      
-      const novoJovem = jovemResult.rows[0];
-      
-      // Criar relação entre o jovem e a instituição ou empresa
-      if (entidadeTipo === 'instituicao_ensino') {
-        await client.query(
-          `INSERT INTO jovens_instituicoes 
-          (jovem_id, instituicao_id, data_inicio, status)
-          VALUES ($1, $2, CURRENT_DATE, 'Ativo')`,
-          [novoJovem.id, entidadeId]
-        );
-      } else if (entidadeTipo === 'chefe_empresa') {
-        await client.query(
-          `INSERT INTO jovens_empresas 
-          (jovem_id, chefe_empresa_id, data_inicio, cargo, status)
-          VALUES ($1, $2, CURRENT_DATE, 'Não informado', 'Ativo')`,
-          [novoJovem.id, entidadeId]
-        );
-      }
-      
-      await client.query('COMMIT');
-      
-      console.log('[API-jovens] Jovem criado com sucesso:', novoJovem.id);
-      
-      // Processar dados para resposta
-      if (novoJovem.habilidades && typeof novoJovem.habilidades === 'string') {
-        try {
-          novoJovem.habilidades = JSON.parse(novoJovem.habilidades);
-        } catch (e) {
-          novoJovem.habilidades = [];
-        }
-      }
-      
-      if (novoJovem.interesses && typeof novoJovem.interesses === 'string') {
-        try {
-          novoJovem.interesses = JSON.parse(novoJovem.interesses);
-        } catch (e) {
-          novoJovem.interesses = [];
-        }
-      }
-      
-      res.status(201).json({
-        success: true,
-        message: 'Jovem criado com sucesso',
-        jovem: novoJovem
-      });
-    } catch (dbError) {
-      await client.query('ROLLBACK');
-      console.error('[API-jovens] Erro na transação:', dbError);
-      return next(new DatabaseError('Erro ao criar jovem', { error: dbError.message }));
-    } finally {
-      client.release();
-    }
+
+    const result = await db.executarQuery(
+      `INSERT INTO jovens (
+        nome, email, idade, formacao, curso,
+        habilidades, interesses, planos_futuros, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+      [
+        req.body.nome,
+        req.body.email,
+        req.body.idade,
+        req.body.formacao,
+        req.body.curso,
+        JSON.stringify(req.body.habilidades),
+        JSON.stringify(req.body.interesses),
+        req.body.planos_futuros,
+        'Ativo'
+      ]
+    );
+
+    res.status(201).json({
+      message: 'Jovem cadastrado com sucesso',
+      id: result.rows[0].id
+    });
   } catch (error) {
-    console.error('[API-jovens] Erro ao criar jovem:', error);
-    next(error);
+    console.error('Erro ao cadastrar jovem:', error);
+    res.status(500).json({ message: 'Erro ao cadastrar jovem' });
   }
 });
 
 // Rota para recomendação de jovens para oportunidades
 router.post('/recomendar', authMiddleware, checkRole(['instituicao_ensino', 'chefe_empresa']), validate(recomendacaoSchema), async (req, res, next) => {
   try {
-    const pool = req.db;
     const { jovem_id, oportunidade_id, justificativa } = req.body;
     
     if (!jovem_id || !oportunidade_id || !justificativa) {
@@ -320,13 +183,13 @@ router.post('/recomendar', authMiddleware, checkRole(['instituicao_ensino', 'che
     }
     
     // Verificar se o jovem existe
-    const jovemExiste = await pool.query('SELECT id FROM jovens WHERE id = $1', [jovem_id]);
+    const jovemExiste = await db.executarQuery('SELECT id FROM jovens WHERE id = $1', [jovem_id]);
     if (jovemExiste.rows.length === 0) {
       return next(new NotFoundError('Jovem não encontrado'));
     }
     
     // Verificar se a oportunidade existe
-    const oportunidadeExiste = await pool.query('SELECT id FROM oportunidades WHERE id = $1', [oportunidade_id]);
+    const oportunidadeExiste = await db.executarQuery('SELECT id FROM oportunidades WHERE id = $1', [oportunidade_id]);
     if (oportunidadeExiste.rows.length === 0) {
       return next(new NotFoundError('Oportunidade não encontrada'));
     }
@@ -336,7 +199,7 @@ router.post('/recomendar', authMiddleware, checkRole(['instituicao_ensino', 'che
     let recomendadorId;
     
     if (recomendadorTipo === 'instituicao_ensino') {
-      const result = await pool.query(
+      const result = await db.executarQuery(
         'SELECT id FROM instituicoes_ensino WHERE usuario_id = $1',
         [req.user.id]
       );
@@ -348,7 +211,7 @@ router.post('/recomendar', authMiddleware, checkRole(['instituicao_ensino', 'che
       recomendadorId = result.rows[0].id;
       
       // Verificar se o jovem está vinculado a esta instituição
-      const vinculo = await pool.query(
+      const vinculo = await db.executarQuery(
         'SELECT id FROM jovens_instituicoes WHERE jovem_id = $1 AND instituicao_id = $2',
         [jovem_id, recomendadorId]
       );
@@ -358,7 +221,7 @@ router.post('/recomendar', authMiddleware, checkRole(['instituicao_ensino', 'che
       }
     } 
     else if (recomendadorTipo === 'chefe_empresa') {
-      const result = await pool.query(
+      const result = await db.executarQuery(
         'SELECT id FROM chefes_empresas WHERE usuario_id = $1',
         [req.user.id]
       );
@@ -370,7 +233,7 @@ router.post('/recomendar', authMiddleware, checkRole(['instituicao_ensino', 'che
       recomendadorId = result.rows[0].id;
       
       // Verificar se o jovem está vinculado a esta empresa
-      const vinculo = await pool.query(
+      const vinculo = await db.executarQuery(
         'SELECT id FROM jovens_empresas WHERE jovem_id = $1 AND chefe_empresa_id = $2',
         [jovem_id, recomendadorId]
       );
@@ -381,7 +244,7 @@ router.post('/recomendar', authMiddleware, checkRole(['instituicao_ensino', 'che
     }
     
     // Verificar se já existe uma recomendação similar
-    const recomendacaoExistente = await pool.query(
+    const recomendacaoExistente = await db.executarQuery(
       `SELECT id FROM recomendacoes 
        WHERE jovem_id = $1 
        AND oportunidade_id = $2 
@@ -396,7 +259,7 @@ router.post('/recomendar', authMiddleware, checkRole(['instituicao_ensino', 'che
     
     // Inserir recomendação
     try {
-      const result = await pool.query(
+      const result = await db.executarQuery(
         `INSERT INTO recomendacoes 
          (jovem_id, oportunidade_id, recomendador_tipo, recomendador_id, justificativa, status)
          VALUES ($1, $2, $3, $4, $5, $6)
@@ -414,6 +277,87 @@ router.post('/recomendar', authMiddleware, checkRole(['instituicao_ensino', 'che
     }
   } catch (error) {
     next(error);
+  }
+});
+
+// Atualizar jovem - apenas instituições de ensino podem atualizar
+router.put('/:id', authMiddleware, checkRole(['instituicao_ensino']), validate(jovemSchema), async (req, res) => {
+  try {
+    // Verificar se o jovem existe
+    const jovemCheck = await db.executarQuery(
+      'SELECT id FROM jovens WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (jovemCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Jovem não encontrado' });
+    }
+
+    // Verificar se o email já está em uso por outro jovem
+    const emailCheck = await db.executarQuery(
+      'SELECT id FROM jovens WHERE email = $1 AND id != $2',
+      [req.body.email, req.params.id]
+    );
+
+    if (emailCheck.rows.length > 0) {
+      return res.status(400).json({ message: 'Email já está em uso' });
+    }
+
+    // Atualizar jovem
+    await db.executarQuery(
+      `UPDATE jovens SET 
+        nome = $1,
+        email = $2,
+        idade = $3,
+        formacao = $4,
+        curso = $5,
+        habilidades = $6,
+        interesses = $7,
+        planos_futuros = $8
+      WHERE id = $9`,
+      [
+        req.body.nome,
+        req.body.email,
+        req.body.idade,
+        req.body.formacao,
+        req.body.curso,
+        JSON.stringify(req.body.habilidades),
+        JSON.stringify(req.body.interesses),
+        req.body.planos_futuros,
+        req.params.id
+      ]
+    );
+
+    res.json({ message: 'Jovem atualizado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao atualizar jovem:', error);
+    res.status(500).json({ message: 'Erro ao atualizar jovem' });
+  }
+});
+
+// Excluir jovem - apenas instituições de ensino podem excluir
+router.delete('/:id', authMiddleware, checkRole(['instituicao_ensino']), async (req, res) => {
+  try {
+    // Verificar se o jovem existe
+    const jovemCheck = await db.executarQuery(
+      'SELECT id FROM jovens WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (jovemCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Jovem não encontrado' });
+    }
+
+    // Excluir jovem
+    await db.executarQuery(
+      'DELETE FROM jovens WHERE id = $1',
+      [req.params.id]
+    );
+
+    res.json({ message: 'Jovem excluído com sucesso' });
+  } catch (error) {
+    console.error('Erro ao excluir jovem:', error);
+    res.status(500).json({ message: 'Erro ao excluir jovem' });
   }
 });
 
