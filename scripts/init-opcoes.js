@@ -15,32 +15,12 @@ const readline = createInterface({
 const question = (query) => new Promise((resolve) => readline.question(query, resolve));
 
 // URL base da API
-const BASE_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const BASE_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
 // Função principal
 async function main() {
   try {
     console.log('=== Inicialização da tabela de opções do sistema ===');
-    
-    // Solicitar credenciais de administrador
-    const email = await question('Email de administrador: ');
-    const senha = await question('Senha: ');
-    
-    // Login para obter token
-    console.log('\nAutenticando...');
-    const loginResponse = await fetch(`${BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, senha })
-    });
-    
-    if (!loginResponse.ok) {
-      const error = await loginResponse.json();
-      throw new Error(`Falha na autenticação: ${error.message || 'Credenciais inválidas'}`);
-    }
-    
-    const { token } = await loginResponse.json();
-    console.log('Autenticação bem-sucedida!\n');
     
     // Perguntar sobre limpar dados existentes
     const limpar = await question('Limpar dados existentes? (s/N): ');
@@ -51,8 +31,7 @@ async function main() {
     const initResponse = await fetch(`${BASE_URL}/api/opcoes/init`, {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ limpar: shouldClear })
     });
