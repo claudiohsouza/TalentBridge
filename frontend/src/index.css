@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cursor-background text-cursor-text-primary font-sans antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-cursor-primary text-white rounded-lg hover:bg-cursor-primary-dark transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-cursor-background-light text-cursor-text-primary rounded-lg hover:bg-cursor-background-card transition-colors duration-200 font-medium border border-cursor-border disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .input-field {
+    @apply w-full p-3 rounded-lg bg-cursor-background-light text-cursor-text-primary border border-cursor-border focus:border-cursor-primary focus:ring-1 focus:ring-cursor-primary focus:outline-none transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .card {
+    @apply bg-cursor-background-card rounded-lg border border-cursor-border shadow-cursor;
+  }
+  
+  .section-title {
+    @apply text-2xl font-bold text-cursor-text-primary mb-4;
+  }
+  
+  .section-subtitle {
+    @apply text-cursor-text-secondary mb-8;
+  }
+
+  .page-transition {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full border-2 border-cursor-background-light border-t-cursor-primary h-5 w-5;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply bg-cursor-success/10 text-cursor-success;
+  }
+
+  .badge-error {
+    @apply bg-cursor-error/10 text-cursor-error;
+  }
+
+  .badge-warning {
+    @apply bg-cursor-warning/10 text-cursor-warning;
+  }
+
+  .badge-default {
+    @apply bg-cursor-text-tertiary/10 text-cursor-text-tertiary;
+  }
+
+  select.input-field {
+    @apply bg-cursor-background-light text-cursor-text-primary border border-cursor-border rounded-lg p-3 w-full focus:border-cursor-primary focus:ring-1 focus:ring-cursor-primary focus:outline-none transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+  }
+  select.input-field option {
+    @apply bg-cursor-background-light text-cursor-text-primary;
+  }
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-cursor-background;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-cursor-border rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-cursor-text-tertiary;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
